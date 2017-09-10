@@ -1,10 +1,10 @@
-# Systemd service file for oauth2_proxy daemon
+# Systemd service file for ldap_proxy daemon
 #
 # Date: Feb 9, 2016
-# Author: Srdjan Grubor <sgnn7@sgnn7.org>
+# Author: Adam Hodgen <adam@hodgen.uk>
 
 [Unit]
-Description=oauth2_proxy daemon service
+Description=ldap_proxy daemon service
 After=syslog.target network.target
 
 [Service]
@@ -12,7 +12,7 @@ After=syslog.target network.target
 User=www-data
 Group=www-data
 
-ExecStart=/usr/local/bin/oauth2_proxy -config=/etc/oauth2_proxy.cfg
+ExecStart=/usr/local/bin/ldap_proxy -config=/etc/ldap_proxy.cfg
 ExecReload=/bin/kill -HUP $MAINPID
 
 KillMode=process

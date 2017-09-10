@@ -1,5 +1,5 @@
-## OAuth2 Proxy Config File
-## https://github.com/bitly/oauth2_proxy
+## LDAP Proxy Config File
+## https://github.com/ant1441/ldap_proxy
 
 ## <addr>:<port> to listen on for HTTP/HTTPS clients
 # http_address = "127.0.0.1:4180"
@@ -8,10 +8,6 @@
 ## TLS Settings
 # tls_cert_file = ""
 # tls_key_file = ""
-
-## the OAuth Redirect URL.
-# defaults to the "https://" + requested host header + "/oauth2/callback"
-# redirect_url = "https://internalapp.yourcompany.com/oauth2/callback"
 
 ## the http url(s) of the upstream endpoint. If multiple, routing is based on path
 # upstreams = [
@@ -34,13 +30,6 @@
 # email_domains = [
 #     "yourcompany.com"
 # ]
-
-## The OAuth Client ID, Secret
-# client_id = "123456.apps.googleusercontent.com"
-# client_secret = ""
-
-## Pass OAuth Access token to upstream via "X-Forwarded-Access-Token"
-# pass_access_token = false
 
 ## Authenticated Email Addresses File (one email per line)
 # authenticated_emails_file = ""
@@ -67,11 +56,11 @@
 ## Expire   - (duration) expire timeframe for cookie
 ## Refresh  - (duration) refresh the cookie when duration has elapsed after cookie was initially set.
 ##            Should be less than cookie_expire; set to 0 to disable.
-##            On refresh, OAuth token is re-validated. 
+##            On refresh, LDAP token is re-validated. 
 ##            (ie: 1h means tokens are refreshed on request 1hr+ after it was set)
 ## Secure   - secure cookies are only sent by the browser of a HTTPS connection (recommended)
 ## HttpOnly - httponly cookies are not readable by javascript (recommended)
-# cookie_name = "_oauth2_proxy"
+# cookie_name = "_ldap_proxy"
 # cookie_secret = ""
 # cookie_domain = ""
 # cookie_expire = "168h"

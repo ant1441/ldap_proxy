@@ -42,8 +42,13 @@ func getTemplates() *template.Template {
 		border-radius: 10px;
 		padding: 20px;
 	}
-	.center {
-		text-align:center;
+	.failed {
+		color: red;
+		display: inherit;
+		margin: inherit;
+		border-radius: inherit;
+		background: #f0f0f0;
+		padding: inherit;
 	}
 	.btn {
 		color: #fff;
@@ -54,10 +59,9 @@ func getTemplates() *template.Template {
 		border-radius: 4px;
 		font-size: 14px;
 		padding: 6px 12px;
-	  	text-decoration: none;
+		text-decoration: none;
 		cursor: pointer;
 	}
-
 	.btn:hover {
 		background-color: #3071a9;
 		border-color: #285e8e;
@@ -109,18 +113,17 @@ func getTemplates() *template.Template {
 	</style>
 </head>
 <body>
-	<div class="signin center">
-	<form method="GET" action="{{.ProxyPrefix}}/start">
-	<input type="hidden" name="rd" value="{{.Redirect}}">
+	<div class="signin" style="text-align:center;">
+	<div>
 	{{ if .SignInMessage }}
 	<p>{{.SignInMessage}}</p>
 	{{ end}}
-	<button type="submit" class="btn">Sign in with a {{.ProviderName}} Account</button><br/>
-	</form>
+	<h1>Sign in with a {{.LdapScopeName}} Account<br/></h1>
 	</div>
 
-	{{ if .CustomLogin }}
-	<div class="signin">
+	{{ if .Failed }}
+	<p class="failed">Invalid Credentials!</p>
+	{{ end}}
 	<form method="POST" action="{{.ProxyPrefix}}/sign_in">
 		<input type="hidden" name="rd" value="{{.Redirect}}">
 		<label for="username">Username:</label><input type="text" name="username" id="username" size="10"><br/>
@@ -128,7 +131,6 @@ func getTemplates() *template.Template {
 		<button type="submit" class="btn">Sign In</button>
 	</form>
 	</div>
-	{{ end }}
 	<script>
 		if (window.location.hash) {
 			(function() {
@@ -142,7 +144,7 @@ func getTemplates() *template.Template {
 	<footer>
 	{{ if eq .Footer "-" }}
 	{{ else if eq .Footer ""}}
-	Secured with <a href="https://github.com/bitly/oauth2_proxy#oauth2_proxy">OAuth2 Proxy</a> version {{.Version}}
+	Secured with <a href="https://github.com/ant1441/ldap_proxy">LDAP Proxy</a> version {{.Version}}
 	{{ else }}
 	{{.Footer}}
 	{{ end }}

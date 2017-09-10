@@ -23,10 +23,10 @@ for os in windows linux darwin; do
     if [ $os = windows ]; then
         EXT=".exe"
     fi
-    BUILD=$(mktemp -d ${TMPDIR:-/tmp}/oauth2_proxy.XXXXXX)
-    TARGET="oauth2_proxy-$version.$os-$arch.$goversion"
+    BUILD=$(mktemp -d ${TMPDIR:-/tmp}/ldap_proxy.XXXXXX)
+    TARGET="ldap_proxy-$version.$os-$arch.$goversion"
     GOOS=$os GOARCH=$arch CGO_ENABLED=0 \
-        go build -ldflags="-s -w" -o $BUILD/$TARGET/oauth2_proxy$EXT || exit 1
+        go build -ldflags="-s -w" -o $BUILD/$TARGET/ldap_proxy$EXT || exit 1
     pushd $BUILD
     tar czvf $TARGET.tar.gz $TARGET
     mv $TARGET.tar.gz $DIR/dist

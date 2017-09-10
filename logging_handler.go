@@ -26,16 +26,16 @@ func (l *responseLogger) Header() http.Header {
 	return l.w.Header()
 }
 
-func (l *responseLogger) ExtractGAPMetadata() {
-	upstream := l.w.Header().Get("GAP-Upstream-Address")
+func (l *responseLogger) ExtractLAPMetadata() {
+	upstream := l.w.Header().Get("LAP-Upstream-Address")
 	if upstream != "" {
 		l.upstream = upstream
-		l.w.Header().Del("GAP-Upstream-Address")
+		l.w.Header().Del("LAP-Upstream-Address")
 	}
-	authInfo := l.w.Header().Get("GAP-Auth")
+	authInfo := l.w.Header().Get("LAP-Auth")
 	if authInfo != "" {
 		l.authInfo = authInfo
-		l.w.Header().Del("GAP-Auth")
+		l.w.Header().Del("LAP-Auth")
 	}
 }
 
@@ -44,14 +44,14 @@ func (l *responseLogger) Write(b []byte) (int, error) {
 		// The status will be StatusOK if WriteHeader has not been called yet
 		l.status = http.StatusOK
 	}
-	l.ExtractGAPMetadata()
+	l.ExtractLAPMetadata()
 	size, err := l.w.Write(b)
 	l.size += size
 	return size, err
 }
 
 func (l *responseLogger) WriteHeader(s int) {
-	l.ExtractGAPMetadata()
+	l.ExtractLAPMetadata()
 	l.w.WriteHeader(s)
 	l.status = s
 }

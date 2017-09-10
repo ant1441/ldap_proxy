@@ -1,5 +1,4 @@
-google_auth_proxy
-oauth2_proxy
+ldap_proxy
 # Go.gitignore
 # Compiled Object files, Static and Dynamic libs (Shared Objects)
 *.o
