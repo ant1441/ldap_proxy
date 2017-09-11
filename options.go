@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -40,6 +41,7 @@ type Options struct {
 
 	Upstreams             []string `flag:"upstream" cfg:"upstreams"`
 	SkipAuthRegex         []string `flag:"skip-auth-regex" cfg:"skip_auth_regex"`
+	SkipAuthIPs           []string `flag:"skip-auth-ips" cfg:"skip_auth_ips"`
 	PassBasicAuth         bool     `flag:"pass-basic-auth" cfg:"pass_basic_auth"`
 	BasicAuthPassword     string   `flag:"basic-auth-password" cfg:"basic_auth_password"`
 	PassHostHeader        bool     `flag:"pass-host-header" cfg:"pass_host_header"`
@@ -47,6 +49,8 @@ type Options struct {
 	SSLInsecureSkipVerify bool     `flag:"ssl-insecure-skip-verify" cfg:"ssl_insecure_skip_verify"`
 	SetXAuthRequest       bool     `flag:"set-xauthrequest" cfg:"set_xauthrequest"`
 	SkipAuthPreflight     bool     `flag:"skip-auth-preflight" cfg:"skip_auth_preflight"`
+	RealIPHeader          string   `flag:"real-ip-header" cfg:"real_ip_header"`
+	ProxyIPHeader         string   `flag:"proxy-ip-header" cfg:"proxy_ip_header"`
 
 	RequestLogging bool `flag:"request-logging" cfg:"request_logging"`
 
@@ -61,9 +65,10 @@ type Options struct {
 	LdapBindDnPassword string `flag:"ldap-bind-dn-password" cfg:"ldap_bind_dn_password"`
 
 	// internal values that are set after config validation
-	proxyURLs     []*url.URL
-	CompiledRegex []*regexp.Regexp
-	signatureData *SignatureData
+	proxyURLs         []*url.URL
+	CompiledPathRegex []*regexp.Regexp
+	skipIPs           []*net.IPNet
+	signatureData     *SignatureData
 }
 
 type SignatureData struct {
@@ -130,7 +135,25 @@ func (o *Options) Validate() error {
 			msgs = append(msgs, fmt.Sprintf(
 				"error compiling regex=%q %s", u, err))
 		}
-		o.CompiledRegex = append(o.CompiledRegex, CompiledRegex)
+		o.CompiledPathRegex = append(o.CompiledPathRegex, CompiledRegex)
+	}
+	for _, u := range o.SkipAuthIPs {
+		if !strings.ContainsAny(u, "/") {
+			// This is a raw IP not a range, lets make it one
+			if strings.ContainsAny(u, ":") {
+				// IPv6
+				u = u + "/128"
+			} else {
+				// IPv4
+				u = u + "/32"
+			}
+		}
+		_, cidr, err := net.ParseCIDR(u)
+		if err != nil {
+			msgs = append(msgs, fmt.Sprintf(
+				"error parsing cidr", u, err))
+		}
+		o.skipIPs = append(o.skipIPs, cidr)
 	}
 
 	if o.CookieRefresh != time.Duration(0) {

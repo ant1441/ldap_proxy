@@ -62,12 +62,16 @@ type LdapProxy struct {
 	PassUserHeaders   bool
 	BasicAuthPassword string
 
+	RealIPHeader  string
+	ProxyIPHeader string
+
 	LdapConnection *LdapConnection
 
 	CookieCipher      *cookie.Cipher
 	skipAuthRegex     []string
+	skipAuthIPs       []*net.IPNet
 	skipAuthPreflight bool
-	compiledRegex     []*regexp.Regexp
+	compiledPathRegex []*regexp.Regexp
 	templates         *template.Template
 	Footer            string
 }
@@ -104,7 +108,7 @@ func NewLdapProxy(opts *Options, validator func(string) bool) *LdapProxy {
 			panic(fmt.Sprintf("unknown upstream protocol %s", u.Scheme))
 		}
 	}
-	for _, u := range opts.CompiledRegex {
+	for _, u := range opts.CompiledPathRegex {
 		log.Printf("compiled skip-auth-regex => %q", u)
 	}
 
@@ -163,11 +167,15 @@ func NewLdapProxy(opts *Options, validator func(string) bool) *LdapProxy {
 		PassUserHeaders:   opts.PassUserHeaders,
 		BasicAuthPassword: opts.BasicAuthPassword,
 
+		RealIPHeader:  opts.RealIPHeader,
+		ProxyIPHeader: opts.ProxyIPHeader,
+
 		LdapConnection: ldapConnection,
 
 		skipAuthRegex:     opts.SkipAuthRegex,
+		skipAuthIPs:       opts.skipIPs,
 		skipAuthPreflight: opts.SkipAuthPreflight,
-		compiledRegex:     opts.CompiledRegex,
+		compiledPathRegex: opts.CompiledPathRegex,
 		CookieCipher:      cipher,
 		templates:         loadTemplates(opts.CustomTemplatesDir),
 		Footer:            opts.Footer,
@@ -312,11 +320,23 @@ func (p *LdapProxy) GetRedirect(req *http.Request) (redirect string, err error) 
 
 func (p *LdapProxy) IsWhitelistedRequest(req *http.Request) (ok bool) {
 	isPreflightRequestAllowed := p.skipAuthPreflight && req.Method == "OPTIONS"
-	return isPreflightRequestAllowed || p.IsWhitelistedPath(req.URL.Path)
+	return isPreflightRequestAllowed || p.IsWhitelistedPath(req.URL.Path) || p.IsWhitelistedIP(p.getRemoteAddr(req))
+}
+
+func (p *LdapProxy) IsWhitelistedIP(remoteAddr net.IP) (ok bool) {
+	if remoteAddr == nil {
+		return false
+	}
+	for _, c := range p.skipAuthIPs {
+		if c.Contains(remoteAddr) {
+			return true
+		}
+	}
+	return false
 }
 
 func (p *LdapProxy) IsWhitelistedPath(path string) (ok bool) {
-	for _, u := range p.compiledRegex {
+	for _, u := range p.compiledPathRegex {
 		ok = u.MatchString(path)
 		if ok {
 			return
@@ -325,10 +345,26 @@ func (p *LdapProxy) IsWhitelistedPath(path string) (ok bool) {
 	return
 }
 
-func getRemoteAddr(req *http.Request) (s string) {
+// TODO: Should we trust X-Real-IP and X-Forwarded-For
+func (p *LdapProxy) getRemoteAddr(req *http.Request) (ip net.IP) {
+	remoteAddrstr := strings.SplitN(req.RemoteAddr, ":", 2)[0]
+	ip = net.ParseIP(remoteAddrstr)
+	if req.Header.Get(p.RealIPHeader) != "" {
+		ip = net.ParseIP(req.Header.Get(p.RealIPHeader))
+	}
+	if req.Header.Get(p.ProxyIPHeader) != "" {
+		ip = net.ParseIP(req.Header.Get(p.ProxyIPHeader))
+	}
+	return
+}
+
+func (p *LdapProxy) getRemoteAddrStr(req *http.Request) (s string) {
 	s = req.RemoteAddr
-	if req.Header.Get("X-Real-IP") != "" {
-		s += fmt.Sprintf(" (%q)", req.Header.Get("X-Real-IP"))
+	if req.Header.Get(p.RealIPHeader) != "" {
+		s += fmt.Sprintf(" (%q)", req.Header.Get(p.RealIPHeader))
+	}
+	if req.Header.Get(p.ProxyIPHeader) != "" {
+		s += fmt.Sprintf(" (%q)", req.Header.Get(p.ProxyIPHeader))
 	}
 	return
 }
@@ -431,7 +467,7 @@ func (p *LdapProxy) Proxy(rw http.ResponseWriter, req *http.Request) {
 
 func (p *LdapProxy) Authenticate(rw http.ResponseWriter, req *http.Request) int {
 	var saveSession, clearSession, revalidated bool
-	remoteAddr := getRemoteAddr(req)
+	remoteAddr := p.getRemoteAddrStr(req)
 
 	session, sessionAge, err := p.LoadCookiedSession(req)
 	if err != nil {

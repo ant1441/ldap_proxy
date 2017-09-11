@@ -20,6 +20,7 @@ func main() {
 	emailDomains := StringArray{}
 	upstreams := StringArray{}
 	skipAuthRegex := StringArray{}
+	skipAuthIPs := StringArray{}
 
 	config := flagSet.String("config", "", "path to config file")
 	showVersion := flagSet.Bool("version", false, "print version string")
@@ -34,9 +35,12 @@ func main() {
 	flagSet.Bool("pass-user-headers", true, "pass X-Forwarded-User and X-Forwarded-Email information to upstream")
 	flagSet.String("basic-auth-password", "", "the password to set when passing the HTTP Basic Auth header")
 	flagSet.Bool("pass-host-header", true, "pass the request Host Header to upstream")
-	flagSet.Var(&skipAuthRegex, "skip-auth-regex", "bypass authentication for requests path's that match (may be given multiple times)")
+	flagSet.Var(&skipAuthRegex, "skip-auth-regex", "bypass authentication for requests paths that match (may be given multiple times)")
+	flagSet.Var(&skipAuthIPs, "skip-auth-ips", "bypass authentication for request hosts that match (may be given multiple times)")
 	flagSet.Bool("skip-auth-preflight", false, "will skip authentication for OPTIONS requests")
 	flagSet.Bool("ssl-insecure-skip-verify", false, "skip validation of certificates presented when using HTTPS")
+	flagSet.String("real-ip-header", "X-Real-IP", "The header which specifies the real IP of the request. Caution: This header may allow a malicious actor to spoof an internal IP, bypassing whitelists. Set to the empty string to ignore")
+	flagSet.String("proxy-ip-header", "X-Forwarded-For", "The header which specifies the real IP of the proxied request. Caution: This header may allow a malicious actor to spoof an internal IP, bypassing whitelists. Set to the empty string to ignore")
 
 	flagSet.Var(&emailDomains, "email-domain", "authenticate emails with the specified domain (may be given multiple times). Use * to authenticate any email")
 	flagSet.String("authenticated-emails-file", "", "authenticate against emails via file (one per line)")
