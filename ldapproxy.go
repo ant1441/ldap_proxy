@@ -4,7 +4,6 @@ import (
 	b64 "encoding/base64"
 
 	"fmt"
-	"github.com/18F/hmacauth"
 	"html/template"
 	"log"
 	"net"
@@ -14,6 +13,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/18F/hmacauth"
 
 	"github.com/ant1441/ldap_proxy/cookie"
 )
@@ -265,8 +266,6 @@ func (p *LdapProxy) SignInPage(rw http.ResponseWriter, req *http.Request, code i
 	p.templates.ExecuteTemplate(rw, "sign_in.html", t)
 }
 func (p *LdapProxy) ManualSignIn(rw http.ResponseWriter, req *http.Request) (string, bool) {
-	fmt.Printf("LdapProxy.ManualSignIn. Method: '%s', '%s'\n",
-		req.Method, p.HtpasswdFile)
 	if req.Method != "POST" || p.HtpasswdFile == nil {
 		return "", false
 	}
@@ -276,7 +275,6 @@ func (p *LdapProxy) ManualSignIn(rw http.ResponseWriter, req *http.Request) (str
 		return "", false
 	}
 	// check auth
-	fmt.Printf("LdapProxy.ManualSignIn. user: '%s' pass: '%s'\n", user, passwd)
 	if p.HtpasswdFile.Validate(user, passwd) {
 		log.Printf("authenticated %q via HtpasswdFile", user)
 		return user, true
@@ -287,8 +285,6 @@ func (p *LdapProxy) ManualSignIn(rw http.ResponseWriter, req *http.Request) (str
 func (p *LdapProxy) LdapSignIn(rw http.ResponseWriter, req *http.Request) (string, bool) {
 	user := req.FormValue("username")
 	passwd := req.FormValue("password")
-	fmt.Printf("LdapProxy.LdapSignIn. Method: '%s', User: '%s', Pass: '%s'\n",
-		req.Method, user, passwd)
 	if user == "" {
 		return "", false
 	}
@@ -338,8 +334,6 @@ func getRemoteAddr(req *http.Request) (s string) {
 }
 
 func (p *LdapProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	fmt.Printf("LdapProxy.ServeHTTP. Path: '%s'\n", req.URL.Path)
-
 	switch path := req.URL.Path; {
 	case path == p.RobotsPath:
 		p.RobotsTxt(rw)
@@ -386,7 +380,6 @@ func NewFileServer(path string, filesystemPath string) (proxy http.Handler) {
 
 func (p *LdapProxy) SignIn(rw http.ResponseWriter, req *http.Request) {
 	redirect, err := p.GetRedirect(req)
-	fmt.Printf("LdapProxy.SignIn. redirect: '%s'\n", redirect)
 	if err != nil {
 		p.ErrorPage(rw, 500, "Internal Error", err.Error())
 		return
