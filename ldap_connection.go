@@ -23,7 +23,7 @@ type LdapConnection struct {
 func NewLdapConnection(host string, port int, tls bool,
 	baseDN string, bindDN string, bindDNPassword string,
 	scopeName string) *LdapConnection {
-	fmt.Printf("Connecting to LDAP '%s:%d' (tls: %t)\n", host, port, tls)
+	log.Printf("Connecting to LDAP '%s:%d' (tls: %t)\n", host, port, tls)
 	return &LdapConnection{
 		Host:           host,
 		Port:           port,
@@ -38,7 +38,7 @@ func NewLdapConnection(host string, port int, tls bool,
 func (l *LdapConnection) VerifyUserPass(username string, password string) bool {
 	ldap_con, err := ldap.Dial("tcp", fmt.Sprintf("%s:%d", l.Host, l.Port))
 	if err != nil {
-		log.Printf("Error connecting to LDAP Server '%s:%s': %s", l.Host, l.Port, err)
+		log.Printf("Error connecting to LDAP Server '%s:%d': %s", l.Host, l.Port, err)
 		return false
 	}
 	defer ldap_con.Close()

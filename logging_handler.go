@@ -107,6 +107,10 @@ func buildLogLine(username, upstream string, req *http.Request, url url.URL, ts 
 	if client == "" {
 		client = req.RemoteAddr
 	}
+	proxyIP := req.Header.Get("X-Forwarded-For")
+	if proxyIP == "" {
+		proxyIP = "-"
+	}
 
 	if c, _, err := net.SplitHostPort(client); err == nil {
 		client = c
@@ -114,8 +118,9 @@ func buildLogLine(username, upstream string, req *http.Request, url url.URL, ts 
 
 	duration := float64(time.Now().Sub(ts)) / float64(time.Second)
 
-	logLine := fmt.Sprintf("%s - %s [%s] %s %s %s %q %s %q %d %d %0.3f\n",
+	logLine := fmt.Sprintf("%s %s %s [%s] %s %s %s %q %s %q %d %d %0.3f\n",
 		client,
+		proxyIP,
 		username,
 		ts.Format("02/Jan/2006:15:04:05 -0700"),
 		req.Host,
