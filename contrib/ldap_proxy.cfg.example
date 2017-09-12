@@ -17,12 +17,20 @@
 ## Log requests to stdout
 # request_logging = true
 
+# LDAP server configuration
+# ldap_server_host = "localhost"
+# ldap_server_port = 389
+# ldap_tls = true
+# ldap_scope_name = "LDAP"
+# ldap_base_dn = "dc=example,dc=com"
+# ldap_base_dn_password = "password"
+
 ## pass HTTP Basic Auth, X-Forwarded-User and X-Forwarded-Email information to upstream
 # pass_basic_auth = true
 # pass_user_headers = true
 ## pass the request Host Header to upstream
 ## when disabled the upstream Host is used as the Host Header
-# pass_host_header = true 
+# pass_host_header = true
 
 ## Email Domains to allow authentication for (this authorizes any email on this domain)
 ## for more granular authorization use `authenticated_emails_file`
@@ -56,7 +64,7 @@
 ## Expire   - (duration) expire timeframe for cookie
 ## Refresh  - (duration) refresh the cookie when duration has elapsed after cookie was initially set.
 ##            Should be less than cookie_expire; set to 0 to disable.
-##            On refresh, LDAP token is re-validated. 
+##            On refresh, LDAP token is re-validated.
 ##            (ie: 1h means tokens are refreshed on request 1hr+ after it was set)
 ## Secure   - secure cookies are only sent by the browser of a HTTPS connection (recommended)
 ## HttpOnly - httponly cookies are not readable by javascript (recommended)

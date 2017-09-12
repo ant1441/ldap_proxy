@@ -46,6 +46,7 @@ Usage of ldap_proxy:
   -tls-key string: path to private key file
 
   -upstream value: the http url(s) of the upstream endpoint or file:// paths for static files. Routing is based on the path
+  -request-logging: Log requests to stdout (default true)
 
   -ldap-server-host: the hostname of the LDAP server
   -ldap-sever-port: the port of the LDAP server (default: 389)
@@ -82,8 +83,6 @@ Usage of ldap_proxy:
   -cookie-refresh duration: refresh the cookie after this duration; 0 to disable
   -cookie-secure: set secure (HTTPS) cookie flag (default true)
   -cookie-httponly: set HttpOnly cookie flag (default true)
-
-  -request-logging: Log requests to stdout (default true)
 
   -login-url string: Authentication endpoint
 
