@@ -51,13 +51,12 @@ type LdapProxy struct {
 	SignOutPath  string
 	AuthOnlyPath string
 
-	ProxyPrefix         string
-	SignInMessage       string
-	HtpasswdFile        *HtpasswdFile
-	DisplayHtpasswdForm bool
-	serveMux            http.Handler
-	SetXAuthRequest     bool
-	PassBasicAuth       bool
+	ProxyPrefix     string
+	SignInMessage   string
+	HtpasswdFile    *HtpasswdFile
+	serveMux        http.Handler
+	SetXAuthRequest bool
+	PassBasicAuth   bool
 
 	PassUserHeaders   bool
 	BasicAuthPassword string

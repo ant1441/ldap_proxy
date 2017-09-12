@@ -29,6 +29,7 @@ func main() {
 	flagSet.String("https-address", ":443", "<addr>:<port> to listen on for HTTPS clients")
 	flagSet.String("tls-cert", "", "path to certificate file")
 	flagSet.String("tls-key", "", "path to private key file")
+
 	flagSet.Bool("set-xauthrequest", false, "set X-Auth-Request-User and X-Auth-Request-Email response headers (useful in Nginx auth_request mode)")
 	flagSet.Var(&upstreams, "upstream", "the http url(s) of the upstream endpoint or file:// paths for static files. Routing is based on the path")
 	flagSet.Bool("pass-basic-auth", true, "pass HTTP Basic Auth, X-Forwarded-User and X-Forwarded-Email information to upstream")
@@ -45,7 +46,6 @@ func main() {
 	flagSet.Var(&emailDomains, "email-domain", "authenticate emails with the specified domain (may be given multiple times). Use * to authenticate any email")
 	flagSet.String("authenticated-emails-file", "", "authenticate against emails via file (one per line)")
 	flagSet.String("htpasswd-file", "", "additionally authenticate against a htpasswd file. Entries must be created with \"htpasswd -s\" for SHA encryption")
-	flagSet.Bool("display-htpasswd-form", true, "display username / password login form if an htpasswd file is provided")
 	flagSet.String("custom-templates-dir", "", "path to custom html templates")
 	flagSet.String("footer", "", "custom footer string. Use \"-\" to disable default footer.")
 	flagSet.String("proxy-prefix", "/ldap_auth", "the url root path that this proxy should be nested under (e.g. /<ldap_auth>/sign_in)")
@@ -61,8 +61,6 @@ func main() {
 	flagSet.Bool("request-logging", true, "Log requests to stdout")
 
 	flagSet.String("login-url", "", "Authentication endpoint")
-	flagSet.String("redeem-url", "", "Token redemption endpoint")
-	flagSet.String("profile-url", "", "Profile access endpoint")
 
 	flagSet.String("signature-key", "", "LAP-Signature request signature key (algorithm:secretkey)")
 
@@ -113,7 +111,6 @@ func main() {
 	if opts.HtpasswdFile != "" {
 		log.Printf("using htpasswd file %s", opts.HtpasswdFile)
 		ldapproxy.HtpasswdFile, err = NewHtpasswdFromFile(opts.HtpasswdFile)
-		ldapproxy.DisplayHtpasswdForm = opts.DisplayHtpasswdForm
 		if err != nil {
 			log.Fatalf("FATAL: unable to open %s %s", opts.HtpasswdFile, err)
 		}

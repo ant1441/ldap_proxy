@@ -27,7 +27,6 @@ type Options struct {
 	EmailDomains            []string `flag:"email-domain" cfg:"email_domains"`
 	AuthenticatedEmailsFile string   `flag:"authenticated-emails-file" cfg:"authenticated_emails_file"`
 	HtpasswdFile            string   `flag:"htpasswd-file" cfg:"htpasswd_file"`
-	DisplayHtpasswdForm     bool     `flag:"display-htpasswd-form" cfg:"display_htpasswd_form"`
 	CustomTemplatesDir      string   `flag:"custom-templates-dir" cfg:"custom_templates_dir"`
 	Footer                  string   `flag:"footer" cfg:"footer"`
 
@@ -78,21 +77,20 @@ type SignatureData struct {
 
 func NewOptions() *Options {
 	return &Options{
-		ProxyPrefix:         "/ldap",
-		HttpAddress:         "127.0.0.1:4180",
-		HttpsAddress:        ":443",
-		DisplayHtpasswdForm: true,
-		CookieName:          "_ldap_proxy",
-		CookieSecure:        true,
-		CookieHttpOnly:      true,
-		CookieExpire:        time.Duration(168) * time.Hour,
-		CookieRefresh:       time.Duration(0),
-		SetXAuthRequest:     false,
-		SkipAuthPreflight:   false,
-		PassBasicAuth:       true,
-		PassUserHeaders:     true,
-		PassHostHeader:      true,
-		RequestLogging:      true,
+		ProxyPrefix:       "/ldap",
+		HttpAddress:       "127.0.0.1:4180",
+		HttpsAddress:      ":443",
+		CookieName:        "_ldap_proxy",
+		CookieSecure:      true,
+		CookieHttpOnly:    true,
+		CookieExpire:      time.Duration(168) * time.Hour,
+		CookieRefresh:     time.Duration(0),
+		SetXAuthRequest:   false,
+		SkipAuthPreflight: false,
+		PassBasicAuth:     true,
+		PassUserHeaders:   true,
+		PassHostHeader:    true,
+		RequestLogging:    true,
 	}
 }
 

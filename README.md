@@ -3,7 +3,7 @@ ldap_proxy
 
 A reverse proxy and static file server that provides authentication using LDAP.
 
-Strongly inspired by [bitly/oauth2_proxy](http://https://github.com/bitly/oauth2_proxy).
+Strongly inspired by [bitly/oauth2_proxy](https://github.com/bitly/oauth2_proxy).
 
 [![Build Status](https://secure.travis-ci.org/ant1441/ldap_proxy.png?branch=master)](http://travis-ci.org/ant1441/ldap_proxy)
 
@@ -38,45 +38,58 @@ An example [ldap_proxy.cfg](contrib/ldap_proxy.cfg.example) config file is in th
 
 ```
 Usage of ldap_proxy:
-  -authenticated-emails-file string: authenticate against emails via file (one per line)
-  -basic-auth-password string: the password to set when passing the HTTP Basic Auth header
   -config string: path to config file
-  -cookie-domain string: an optional cookie domain to force cookies to (ie: .yourcompany.com)*
-  -cookie-expire duration: expire timeframe for cookie (default 168h0m0s)
-  -cookie-httponly: set HttpOnly cookie flag (default true)
-  -cookie-name string: the name of the cookie that the oauth_proxy creates (default "_oauth2_proxy")
-  -cookie-refresh duration: refresh the cookie after this duration; 0 to disable
-  -cookie-secret string: the seed string for secure cookies (optionally base64 encoded)
-  -cookie-secure: set secure (HTTPS) cookie flag (default true)
-  -custom-templates-dir string: path to custom html templates
-  -display-htpasswd-form: display username / password login form if an htpasswd file is provided (default true)
-  -email-domain value: authenticate emails with the specified domain (may be given multiple times). Use * to authenticate any email
-  -footer string: custom footer string. Use "-" to disable default footer.
-  -htpasswd-file string: additionally authenticate against a htpasswd file. Entries must be created with "htpasswd -s" for SHA encryption
+
   -http-address string: [http://]<addr>:<port> or unix://<path> to listen on for HTTP clients (default "127.0.0.1:4180")
   -https-address string: <addr>:<port> to listen on for HTTPS clients (default ":443")
-  -login-url string: Authentication endpoint
-  -pass-basic-auth: pass HTTP Basic Auth, X-Forwarded-User and X-Forwarded-Email information to upstream (default true)
-  -pass-host-header: pass the request Host Header to upstream (default true)
-  -pass-user-headers: pass X-Forwarded-User and X-Forwarded-Email information to upstream (default true)
-  -profile-url string: Profile access endpoint
-  -provider string: OAuth provider (default "google")
-  -proxy-prefix string: the url root path that this proxy should be nested under (e.g. /<oauth2>/sign_in) (default "/oauth2")
-  -redeem-url string: Token redemption endpoint
-  -redirect-url string: the OAuth Redirect URL. ie: "https://internalapp.yourcompany.com/oauth2/callback"
-  -request-logging: Log requests to stdout (default true)
-  -resource string: The resource that is protected (Azure AD only)
-  -scope string: OAuth scope specification
-  -set-xauthrequest: set X-Auth-Request-User and X-Auth-Request-Email response headers (useful in Nginx auth_request mode)
-  -signature-key string: GAP-Signature request signature key (algorithm:secretkey)
-  -skip-auth-preflight: will skip authentication for OPTIONS requests
-  -skip-auth-regex value: bypass authentication for requests path's that match (may be given multiple times)
-  -skip-provider-button: will skip sign-in-page to directly reach the next step: oauth/start
-  -ssl-insecure-skip-verify: skip validation of certificates presented when using HTTPS
   -tls-cert string: path to certificate file
   -tls-key string: path to private key file
+
   -upstream value: the http url(s) of the upstream endpoint or file:// paths for static files. Routing is based on the path
-  -validate-url string: Access token validation endpoint
+
+  -ldap-server-host: the hostname of the LDAP server
+  -ldap-sever-port: the port of the LDAP server (default: 389)
+  -ldap-tls: use TLS when speaking to the LDAP host
+  -ldap-scope-name: name of LDAP scope (default: LDAP)
+  -ldap-base-dn: base DN to search in LDAP
+  -ldap-bind-dn: base DN to bind LDAP
+  -ldap-bind-dn-password: password for LDAP bind
+
+  -pass-basic-auth: pass HTTP Basic Auth, X-Forwarded-User and X-Forwarded-Email information to upstream (default true)
+  -pass-user-headers: pass X-Forwarded-User and X-Forwarded-Email information to upstream (default true)
+  -basic-auth-password string: the password to set when passing the HTTP Basic Auth header
+  -pass-host-header: pass the request Host Header to upstream (default true)
+
+  -skip-auth-preflight: will skip authentication for OPTIONS requests
+  -skip-auth-regex value: bypass authentication for requests paths that match (may be given multiple times)
+  -skip-auth-ips value: bypass authentication for requests hosts that match (may be given multiple times)
+
+  -ssl-insecure-skip-verify: skip validation of certificates presented when using HTTPS (default false)
+  -real-ip-header: The header which specifies the real IP of the request. Caution: This header may allow a malicious actor to spoof an internal IP, bypassing whitelists. Set to the empty string to ignore (default X-Real-IP)
+  -proxy-ip-header: The header which specifies the real IP of the proxied request. Caution: This header may allow a malicious actor to spoof an internal IP, bypassing whitelists. Set to the empty string to ignore (default X-Forwarded-For)
+
+  -email-domain value: authenticate emails with the specified domain (may be given multiple times). Use * to authenticate any email
+  -authenticated-emails-file string: authenticate against emails via file (one per line)
+  -htpasswd-file string: additionally authenticate against a htpasswd file. Entries must be created with "htpasswd -s" for SHA encryption
+  -custom-templates-dir string: path to custom html templates
+  -footer string: custom footer string. Use "-" to disable default footer.
+  -proxy-prefix string: the url root path that this proxy should be nested under (e.g. /<ldap_proxy>/sign_in) (default "/ldap_auth")
+
+  -cookie-name string: the name of the cookie that the ldap_proxy creates (default "_ldap_proxy")
+  -cookie-secret string: the seed string for secure cookies (optionally base64 encoded)
+  -cookie-domain string: an optional cookie domain to force cookies to (ie: .yourcompany.com)*
+  -cookie-expire duration: expire timeframe for cookie (default 168h0m0s)
+  -cookie-refresh duration: refresh the cookie after this duration; 0 to disable
+  -cookie-secure: set secure (HTTPS) cookie flag (default true)
+  -cookie-httponly: set HttpOnly cookie flag (default true)
+
+  -request-logging: Log requests to stdout (default true)
+
+  -login-url string: Authentication endpoint
+
+  -set-xauthrequest: set X-Auth-Request-User and X-Auth-Request-Email response headers (useful in Nginx auth_request mode)
+  -signature-key string: LAP-Signature request signature key (algorithm:secretkey)
+
   -version: print version string
 ```
 
@@ -157,8 +170,7 @@ server {
 The command line to run `ldap_proxy` in this configuration would look like this:
 
 ```bash
-./oauth2_proxy \
-   --email-domain="yourcompany.com"  \
+./ldap_proxy \
    --upstream=http://127.0.0.1:8080/ \
    --cookie-secret=... \
    --cookie-secure=true \
@@ -213,7 +225,7 @@ server {
   server_name ...;
   include ssl/ssl.conf;
 
-  location /oauth2/ {
+  location /ldap_auth/ {
     proxy_pass       http://127.0.0.1:4180;
     proxy_set_header Host                    $host;
     proxy_set_header X-Real-IP               $remote_addr;
