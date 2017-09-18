@@ -52,6 +52,13 @@
 ## optional directory with custom sign_in.html and error.html
 # custom_templates_dir = ""
 
+# skip authentication for OPTIONS requests
+# skip_auth_preflight = false
+# bypass authentication for requests paths that match. caution: it is recommended to use anchors to ensure the match isn't more permissive than you expect
+# skip_auth_regex = []
+# bypass authentication for requests hosts that match
+# skip_auth_ips = []
+
 ## skip SSL checking for HTTPS requests
 # ssl_insecure_skip_verify = false
 
