@@ -55,7 +55,7 @@ func (l *LdapConnection) VerifyUserPass(username string, password string) bool {
 	// First bind with a read only user
 	err = ldap_con.Bind(l.BindDN, l.BindDNPassword)
 	if err != nil {
-		log.Printf("Error binding LDAP: ", err)
+		log.Printf("Error binding LDAP: %v", err)
 		return false
 	}
 

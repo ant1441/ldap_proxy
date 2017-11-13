@@ -149,7 +149,7 @@ func (o *Options) Validate() error {
 		_, cidr, err := net.ParseCIDR(u)
 		if err != nil {
 			msgs = append(msgs, fmt.Sprintf(
-				"error parsing cidr", u, err))
+				"error parsing cidr %q: %v", u, err))
 		}
 		o.skipIPs = append(o.skipIPs, cidr)
 	}
