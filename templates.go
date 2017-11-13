@@ -127,7 +127,7 @@ func getTemplates() *template.Template {
 	<form method="POST" action="{{.ProxyPrefix}}/sign_in">
 		<input type="hidden" name="rd" value="{{.Redirect}}">
 		<label for="username">Username:</label><input type="text" name="username" id="username" size="10"><br/>
-		<label for="password">Password:</label><input type="password" name="password" id="password" size="10"><br/>
+		<label for="password">Password:</label><input type="password" name="password" id="password" size="10" autocomplete="off"><br/>
 		<button type="submit" class="btn">Sign In</button>
 	</form>
 	</div>
