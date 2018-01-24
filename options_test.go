@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto"
+	"crypto/tls"
 	"fmt"
 	"net/url"
 	"strings"
@@ -154,4 +155,21 @@ func TestValidateCookieBadName(t *testing.T) {
 	err := o.Validate()
 	assert.Equal(t, err.Error(), "Invalid configuration:\n"+
 		fmt.Sprintf("  invalid cookie name: %q", o.CookieName))
+}
+
+func TestValidateCiphersBadName(t *testing.T) {
+	o := testOptions()
+	o.CiphersSuites = "bad_cipher"
+	err := o.Validate()
+	assert.Equal(t, err.Error(), "Invalid configuration:\n"+
+		fmt.Sprintf("  unsupported cipher %q", o.CiphersSuites))
+}
+
+func TestValidateCipher(t *testing.T) {
+	o := testOptions()
+	o.CiphersSuites = "TLS_RSA_WITH_RC4_128_SHA,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305"
+	assert.Equal(t, nil, o.Validate())
+
+	assert.Equal(t, tls.TLS_RSA_WITH_RC4_128_SHA, o.ciphersSuites[0])
+	assert.Equal(t, tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305, o.ciphersSuites[1])
 }

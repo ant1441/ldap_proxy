@@ -21,8 +21,9 @@ type Options struct {
 	HttpAddress  string `flag:"http-address" cfg:"http_address"`
 	HttpsAddress string `flag:"https-address" cfg:"https_address"`
 
-	TLSCertFile string `flag:"tls-cert" cfg:"tls_cert_file"`
-	TLSKeyFile  string `flag:"tls-key" cfg:"tls_key_file"`
+	TLSCertFile   string `flag:"tls-cert" cfg:"tls_cert_file"`
+	TLSKeyFile    string `flag:"tls-key" cfg:"tls_key_file"`
+	CiphersSuites string `flag:"cipher-suites" cfg:"cipher_suites"`
 
 	EmailDomains            []string `flag:"email-domain" cfg:"email_domains"`
 	AuthenticatedEmailsFile string   `flag:"authenticated-emails-file" cfg:"authenticated_emails_file"`
@@ -68,6 +69,7 @@ type Options struct {
 	CompiledPathRegex []*regexp.Regexp
 	skipIPs           []*net.IPNet
 	signatureData     *SignatureData
+	ciphersSuites     []uint16
 }
 
 type SignatureData struct {
@@ -196,6 +198,8 @@ func (o *Options) Validate() error {
 		http.DefaultClient = &http.Client{Transport: insecureTransport}
 	}
 
+	msgs = parseCipherSuites(o, msgs)
+
 	if len(msgs) != 0 {
 		return fmt.Errorf("Invalid configuration:\n  %s",
 			strings.Join(msgs, "\n  "))
@@ -220,6 +224,19 @@ func parseSignatureKey(o *Options, msgs []string) []string {
 			o.SignatureKey)
 	} else {
 		o.signatureData = &SignatureData{hash, secretKey}
+	}
+	return msgs
+}
+
+func parseCipherSuites(o *Options, msgs []string) []string {
+	if o.CiphersSuites == "" {
+		return msgs
+	}
+
+	if ciphers, err := cipherSuites(o.CiphersSuites); err != nil {
+		return append(msgs, err.Error())
+	} else {
+		o.ciphersSuites = ciphers
 	}
 	return msgs
 }
@@ -253,4 +270,47 @@ func secretBytes(secret string) []byte {
 		return []byte(addPadding(string(b)))
 	}
 	return []byte(secret)
+}
+
+// parse user supplied cipher list
+func cipherSuites(cipherStr string) ([]uint16, error) {
+	// https://golang.org/src/crypto/tls/cipher_suites.go
+
+	cipherMap := map[string]uint16{
+		"TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305":    tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
+		"TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305":  tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
+		"TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256":   tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+		"TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256": tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+		"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384":   tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+		"TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384": tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+		"TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256":   tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,
+		"TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA":      tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+		"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256": tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
+		"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA":    tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
+		"TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA":      tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+		"TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA":    tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+		"TLS_RSA_WITH_AES_128_GCM_SHA256":         tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
+		"TLS_RSA_WITH_AES_256_GCM_SHA384":         tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+		"TLS_RSA_WITH_AES_128_CBC_SHA256":         tls.TLS_RSA_WITH_AES_128_CBC_SHA256,
+		"TLS_RSA_WITH_AES_128_CBC_SHA":            tls.TLS_RSA_WITH_AES_128_CBC_SHA,
+		"TLS_RSA_WITH_AES_256_CBC_SHA":            tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+		"TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA":     tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+		"TLS_RSA_WITH_3DES_EDE_CBC_SHA":           tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+		"TLS_RSA_WITH_RC4_128_SHA":                tls.TLS_RSA_WITH_RC4_128_SHA,
+		"TLS_ECDHE_RSA_WITH_RC4_128_SHA":          tls.TLS_ECDHE_RSA_WITH_RC4_128_SHA,
+		"TLS_ECDHE_ECDSA_WITH_RC4_128_SHA":        tls.TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,
+	}
+
+	userCiphers := strings.Split(cipherStr, ",")
+	suites := []uint16{}
+
+	for _, cipher := range userCiphers {
+		if v, ok := cipherMap[cipher]; ok {
+			suites = append(suites, v)
+		} else {
+			return suites, fmt.Errorf("unsupported cipher %q", cipher)
+		}
+	}
+
+	return suites, nil
 }
