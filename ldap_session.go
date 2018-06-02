@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ant1441/ldap_proxy/cookie"
+	"github.com/skybet/ldap_proxy/cookie"
 )
 
 func (p *LdapProxy) ClearSessionCookie(rw http.ResponseWriter, req *http.Request) {
@@ -43,6 +43,7 @@ func (p *LdapProxy) SaveSession(rw http.ResponseWriter, req *http.Request, s *Se
 	if err != nil {
 		return err
 	}
+
 	p.SetSessionCookie(rw, req, value)
 	return nil
 }
