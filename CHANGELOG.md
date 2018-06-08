@@ -1,3 +1,7 @@
+0.3.0 (2018-06-08)
+==================
+* Add the ability to restrict access by LDAP group
+
 0.2.0 (2018-01-25)
 ==================
 * Add options for customizing TLS cipher suites
