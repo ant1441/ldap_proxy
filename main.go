@@ -21,6 +21,7 @@ func main() {
 	upstreams := StringArray{}
 	skipAuthRegex := StringArray{}
 	skipAuthIPs := StringArray{}
+	ldapGroups := StringArray{}
 
 	config := flagSet.String("config", "", "path to config file")
 	showVersion := flagSet.Bool("version", false, "print version string")
@@ -73,6 +74,7 @@ func main() {
 	flagSet.String("ldap-base-dn", "", "Base DN for LDAP bind")
 	flagSet.String("ldap-bind-dn", "", "Bind DN for LDAP bind")
 	flagSet.String("ldap-bind-dn-password", "", "Bind DN password for LDAP bind")
+	flagSet.Var(&ldapGroups, "ldap-groups", "Groups a user must be in")
 
 	flagSet.Parse(os.Args[1:])
 

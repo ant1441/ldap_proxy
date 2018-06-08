@@ -10,7 +10,7 @@ Strongly inspired by [bitly/oauth2_proxy](https://github.com/bitly/oauth2_proxy)
 
 ## Installation
 
-1. Download [Prebuilt Binary](https://github.com/ant1441/ldap_proxy/releases) (current release is `v2.2`) or build with `$ go get github.com/ant1441/ldap_proxy` which will put the binary in `$GOROOT/bin`
+1. Download [Prebuilt Binary](https://github.com/skybet/ldap_proxy/releases) (current release is `v2.2`) or build with `$ go get github.com/skybet/ldap_proxy` which will put the binary in `$GOROOT/bin`
 3. Configure Ldap Proxy using config file, command line options, or environment variables
 4. Configure SSL or Deploy behind a SSL endpoint (example provided for Nginx)
 
@@ -23,6 +23,7 @@ Strongly inspired by [bitly/oauth2_proxy](https://github.com/bitly/oauth2_proxy)
 * `-ldap-base-dn <dn>`
 * `-ldap-bind-dn <dn>`
 * `-ldap-bind-dn-password <password>`
+* `-ldap-groups [optional list of acceptable groups]`
 
 ## Configuration
 
@@ -55,6 +56,7 @@ Usage of ldap_proxy:
   -ldap-base-dn: base DN to search in LDAP
   -ldap-bind-dn: base DN to bind LDAP
   -ldap-bind-dn-password: password for LDAP bind
+  -ldap-groups: optional list of LDAP groups the user should be in (default: any)
 
   -pass-basic-auth: pass HTTP Basic Auth, X-Forwarded-User and X-Forwarded-Email information to upstream (default true)
   -pass-user-headers: pass X-Forwarded-User and X-Forwarded-Email information to upstream (default true)

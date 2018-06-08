@@ -31,14 +31,10 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/bmizerany/assert"
-
-[[constraint]]
-  branch = "master"
   name = "github.com/mreiferson/go-options"
 
 [[constraint]]
-  name = "gopkg.in/fsnotify.v1"
+  name = "gopkg.in/fsnotify/fsnotify.v1"
   version = "1.4.7"
 
 [[constraint]]

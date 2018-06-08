@@ -56,13 +56,14 @@ type Options struct {
 
 	SignatureKey string `flag:"signature-key" cfg:"signature_key" env:"LDAP_PROXY_SIGNATURE_KEY"`
 
-	LdapServerHost     string `flag:"ldap-server-host" cfg:"ldap_server_host"`
-	LdapServerPort     int    `flag:"ldap-server-port" cfg:"ldap_server_port"`
-	LdapTLS            bool   `flag:"ldap-tls" cfg:"ldap_tls"`
-	LdapScopeName      string `flag:"ldap-scope-name" cfg:"ldap_scope_name"`
-	LdapBaseDn         string `flag:"ldap-base-dn" cfg:"ldap_base_dn"`
-	LdapBindDn         string `flag:"ldap-bind-dn" cfg:"ldap_bind_dn"`
-	LdapBindDnPassword string `flag:"ldap-bind-dn-password" cfg:"ldap_bind_dn_password"`
+	LdapServerHost     string   `flag:"ldap-server-host" cfg:"ldap_server_host"`
+	LdapServerPort     int      `flag:"ldap-server-port" cfg:"ldap_server_port"`
+	LdapTLS            bool     `flag:"ldap-tls" cfg:"ldap_tls"`
+	LdapScopeName      string   `flag:"ldap-scope-name" cfg:"ldap_scope_name"`
+	LdapBaseDn         string   `flag:"ldap-base-dn" cfg:"ldap_base_dn"`
+	LdapBindDn         string   `flag:"ldap-bind-dn" cfg:"ldap_bind_dn"`
+	LdapBindDnPassword string   `flag:"ldap-bind-dn-password" cfg:"ldap_bind_dn_password"`
+	LdapGroups         []string `flag:"ldap-groups" cfg:"ldap_groups"`
 
 	// internal values that are set after config validation
 	proxyURLs         []*url.URL
