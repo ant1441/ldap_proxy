@@ -31,10 +31,6 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/bmizerany/assert"
-
-[[constraint]]
-  branch = "master"
   name = "github.com/mreiferson/go-options"
 
 [[constraint]]
@@ -42,5 +38,5 @@
   version = "1.4.7"
 
 [[constraint]]
-  name = "github.com/jtblin/go-ldap-client"
-  branch = "master"
+  name = "gopkg.in/ldap.v2"
+  version = "2.5.1"

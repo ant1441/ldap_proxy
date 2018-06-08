@@ -135,8 +135,8 @@ func NewLdapProxy(opts *Options, validator func(string) bool) *LdapProxy {
 		Base:         opts.LdapBaseDn,
 		Host:         opts.LdapServerHost,
 		Port:         opts.LdapServerPort,
-		UseSSL:       opts.LdapTLS,
-		SkipTLS:      !opts.LdapTLS,
+		UseSSL:       false, // we don't support ssl for now
+		UseTLS:       opts.LdapTLS,
 		BindDN:       opts.LdapBindDn,
 		BindPassword: opts.LdapBindDnPassword,
 		UserFilter:   "(&(objectClass=User)(uid=%s))",
