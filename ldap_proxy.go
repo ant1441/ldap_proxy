@@ -448,7 +448,7 @@ func (p *LdapProxy) SignIn(rw http.ResponseWriter, req *http.Request) {
 			log.Printf("failed to save session %v", err)
 		}
 
-		http.Redirect(rw, req, redirect, http.StatusTemporaryRedirect)
+		http.Redirect(rw, req, redirect, http.StatusFound)
 		return
 	}
 
@@ -466,7 +466,7 @@ func (p *LdapProxy) SignIn(rw http.ResponseWriter, req *http.Request) {
 				log.Printf("failed to save session %v", err)
 			}
 
-			http.Redirect(rw, req, redirect, http.StatusTemporaryRedirect)
+			http.Redirect(rw, req, redirect, http.StatusFound)
 			return
 		}
 
@@ -476,8 +476,11 @@ func (p *LdapProxy) SignIn(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	p.SaveSession(rw, req, session)
-	http.Redirect(rw, req, redirect, http.StatusTemporaryRedirect)
+	if err := p.SaveSession(rw, req, session); err != nil {
+		log.Printf("failed to save session %v", err)
+	}
+
+	http.Redirect(rw, req, redirect, http.StatusFound)
 }
 
 func (p *LdapProxy) SignOut(rw http.ResponseWriter, req *http.Request) {
