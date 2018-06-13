@@ -1,3 +1,7 @@
+0.3.1 (2018-06-13)
+==================
+* Fix redirect behaviour after login
+
 0.3.0 (2018-06-08)
 ==================
 * Add the ability to restrict access by LDAP group
