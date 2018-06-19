@@ -132,16 +132,16 @@ func NewLdapProxy(opts *Options, validator func(string) bool) *LdapProxy {
 	}
 
 	ldapConnection := &LDAPClient{
-		Base:         opts.LdapBaseDn,
-		Host:         opts.LdapServerHost,
-		Port:         opts.LdapServerPort,
-		UseSSL:       false, // we don't support ssl for now
-		UseTLS:       opts.LdapTLS,
-		BindDN:       opts.LdapBindDn,
-		BindPassword: opts.LdapBindDnPassword,
-		UserFilter:   "(&(objectClass=User)(uid=%s))",
-		GroupFilter:  "(&(objectClass=group)(member:1.2.840.113556.1.4.1941:=%s))",
-		Attributes:   []string{"mail", "cn"},
+		Base:               opts.LdapBaseDn,
+		Host:               opts.LdapServerHost,
+		Port:               opts.LdapServerPort,
+		UseTLS:             opts.LdapTLS,
+		InsecureSkipVerify: true,
+		BindDN:             opts.LdapBindDn,
+		BindPassword:       opts.LdapBindDnPassword,
+		UserFilter:         "(&(objectClass=User)(uid=%s))",
+		GroupFilter:        "(&(objectClass=group)(member:1.2.840.113556.1.4.1941:=%s))",
+		Attributes:         []string{"mail", "cn"},
 	}
 
 	if opts.LdapTLS {
@@ -308,8 +308,6 @@ func (p *LdapProxy) LdapSignIn(rw http.ResponseWriter, req *http.Request) (strin
 		log.Printf("Error authenticating user %s: %+v", user, err)
 		return "", nil, false
 	}
-
-	defer p.LdapConnection.Close()
 
 	if ok {
 		log.Printf("authenticated %q via LDAP", user)

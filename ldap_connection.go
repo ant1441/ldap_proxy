@@ -7,6 +7,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"log"
 
 	ldap "gopkg.in/ldap.v2"
 )
@@ -24,7 +25,6 @@ type LDAPClient struct {
 	Conn               *ldap.Conn
 	Port               int
 	InsecureSkipVerify bool
-	UseSSL             bool
 	UseTLS             bool
 	ClientCertificates []tls.Certificate // Adding client certificates
 }
@@ -34,31 +34,17 @@ func (lc *LDAPClient) Connect() error {
 	if lc.Conn == nil {
 		var l *ldap.Conn
 		var err error
-		address := fmt.Sprintf("%s:%d", lc.Host, lc.Port)
 
-		if !lc.UseSSL {
-			l, err = ldap.Dial("tcp", address)
-			if err != nil {
-				return err
-			}
+		l, err = ldap.Dial("tcp", fmt.Sprintf("%s:%d", lc.Host, lc.Port))
+		if err != nil {
+			log.Printf("Unable to connect to LDAP Server: %+v", err)
+			return err
+		}
 
-			// Reconnect with TLS
-			if lc.UseTLS {
-				err = l.StartTLS(&tls.Config{InsecureSkipVerify: true})
-				if err != nil {
-					return err
-				}
-			}
-		} else {
-			config := &tls.Config{
-				InsecureSkipVerify: lc.InsecureSkipVerify,
-				ServerName:         lc.ServerName,
-			}
-			if lc.ClientCertificates != nil && len(lc.ClientCertificates) > 0 {
-				config.Certificates = lc.ClientCertificates
-			}
-			l, err = ldap.DialTLS("tcp", address, config)
+		if lc.UseTLS {
+			err = l.StartTLS(&tls.Config{InsecureSkipVerify: lc.InsecureSkipVerify})
 			if err != nil {
+				log.Printf("Unable to connect to LDAP Server with TLS: %+v", err)
 				return err
 			}
 		}
@@ -66,6 +52,7 @@ func (lc *LDAPClient) Connect() error {
 		lc.Conn = l
 	}
 	return nil
+
 }
 
 // Close closes the ldap backend connection.
@@ -82,6 +69,8 @@ func (lc *LDAPClient) Authenticate(username, password string) (bool, map[string]
 	if err != nil {
 		return false, nil, err
 	}
+
+	defer lc.Close()
 
 	// First bind with a read only user
 	if lc.BindDN != "" && lc.BindPassword != "" {
@@ -145,6 +134,8 @@ func (lc *LDAPClient) GetGroupsOfUser(username string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	defer lc.Close()
 
 	searchRequest := ldap.NewSearchRequest(
 		lc.Base,
