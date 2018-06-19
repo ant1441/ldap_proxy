@@ -63,8 +63,8 @@ type LdapProxy struct {
 	RealIPHeader  string
 	ProxyIPHeader string
 
-	LdapConnection *LDAPClient
-	LdapGroups     []string
+	LdapConfiguration *LDAPConfiguration
+	LdapGroups        []string
 
 	CookieCipher      *cookie.Cipher
 	skipAuthRegex     []string
@@ -131,7 +131,7 @@ func NewLdapProxy(opts *Options, validator func(string) bool) *LdapProxy {
 		}
 	}
 
-	ldapConnection := &LDAPClient{
+	ldapCfg := &LDAPConfiguration{
 		Base:               opts.LdapBaseDn,
 		Host:               opts.LdapServerHost,
 		Port:               opts.LdapServerPort,
@@ -142,10 +142,6 @@ func NewLdapProxy(opts *Options, validator func(string) bool) *LdapProxy {
 		UserFilter:         "(&(objectClass=User)(uid=%s))",
 		GroupFilter:        "(&(objectClass=group)(member:1.2.840.113556.1.4.1941:=%s))",
 		Attributes:         []string{"mail", "cn"},
-	}
-
-	if opts.LdapTLS {
-		ldapConnection.ServerName = opts.LdapServerHost
 	}
 
 	return &LdapProxy{
@@ -176,8 +172,8 @@ func NewLdapProxy(opts *Options, validator func(string) bool) *LdapProxy {
 		RealIPHeader:  opts.RealIPHeader,
 		ProxyIPHeader: opts.ProxyIPHeader,
 
-		LdapConnection: ldapConnection,
-		LdapGroups:     opts.LdapGroups,
+		LdapConfiguration: ldapCfg,
+		LdapGroups:        opts.LdapGroups,
 
 		skipAuthRegex:     opts.SkipAuthRegex,
 		skipAuthIPs:       opts.skipIPs,
@@ -302,8 +298,17 @@ func (p *LdapProxy) LdapSignIn(rw http.ResponseWriter, req *http.Request) (strin
 	if user == "" {
 		return "", nil, false
 	}
+
+	ldapClient, err := NewLDAPConnect(p.LdapConfiguration)
+	if err != nil {
+		log.Printf("Failed to open LDAP Connection: %+v", err)
+		return "", nil, false
+	}
+
+	defer ldapClient.Close()
+
 	// check auth
-	ok, attributes, err := p.LdapConnection.Authenticate(user, passwd)
+	ok, attributes, err := ldapClient.Authenticate(user, passwd)
 	if err != nil {
 		log.Printf("Error authenticating user %s: %+v", user, err)
 		return "", nil, false
@@ -311,7 +316,7 @@ func (p *LdapProxy) LdapSignIn(rw http.ResponseWriter, req *http.Request) (strin
 
 	if ok {
 		log.Printf("authenticated %q via LDAP", user)
-		groups, err := p.LdapConnection.GetGroupsOfUser(attributes["dn"])
+		groups, err := ldapClient.GetGroupsOfUser(attributes["dn"])
 		if err != nil {
 			log.Printf("Error getting groups for user %s: %+v", user, err)
 			return user, nil, true
