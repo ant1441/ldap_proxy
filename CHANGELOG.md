@@ -1,3 +1,7 @@
+0.3.2 (2018-06-19)
+==================
+* Fix issue with LDAP timeouts when old connections are re-used
+
 0.3.1 (2018-06-13)
 ==================
 * Fix redirect behaviour after login
