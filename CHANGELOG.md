@@ -1,3 +1,7 @@
+0.3.3 (2018-06-21)
+==================
+* Refactor LDAP connection code and use connections more efficiently
+
 0.3.2 (2018-06-19)
 ==================
 * Fix issue with LDAP timeouts when old connections are re-used
