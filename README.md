@@ -7,6 +7,7 @@ Strongly inspired by [bitly/oauth2_proxy](https://github.com/bitly/oauth2_proxy)
 
 [![Build Status](https://secure.travis-ci.org/ant1441/ldap_proxy.png?branch=master)](http://travis-ci.org/ant1441/ldap_proxy)
 
+![Screenshot](docs/screenshot.png)
 
 ## Installation
 
