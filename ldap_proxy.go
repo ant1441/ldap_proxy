@@ -18,9 +18,9 @@ import (
 	"github.com/skybet/ldap_proxy/cookie"
 )
 
-const SignatureHeader = "LAP-Signature"
+const signatureHeader = "LAP-Signature"
 
-var SignatureHeaders []string = []string{
+var signatureHeaders = []string{
 	"Content-Length",
 	"Content-Md5",
 	"Content-Type",
@@ -33,13 +33,14 @@ var SignatureHeaders []string = []string{
 	"Lap-Auth",
 }
 
+// LdapProxy represents a reverse proxy with LDAP auth
 type LdapProxy struct {
 	CookieSeed     string
 	CookieName     string
 	CSRFCookieName string
 	CookieDomain   string
 	CookieSecure   bool
-	CookieHttpOnly bool
+	CookieHTTPOnly bool
 	CookieExpire   time.Duration
 	CookieRefresh  time.Duration
 	Validator      func(string) bool
@@ -80,7 +81,7 @@ func NewLdapProxy(opts *Options, validator func(string) bool) *LdapProxy {
 	var auth hmacauth.HmacAuth
 	if sigData := opts.signatureData; sigData != nil {
 		auth = hmacauth.NewHmacAuth(sigData.hash, []byte(sigData.key),
-			SignatureHeader, SignatureHeaders)
+			signatureHeader, signatureHeaders)
 	}
 	for _, u := range opts.proxyURLs {
 		path := u.Path
@@ -120,7 +121,7 @@ func NewLdapProxy(opts *Options, validator func(string) bool) *LdapProxy {
 		refresh = fmt.Sprintf("after %s", opts.CookieRefresh)
 	}
 
-	log.Printf("Cookie settings: name:%s secure(https):%v httponly:%v expiry:%s domain:%s refresh:%s", opts.CookieName, opts.CookieSecure, opts.CookieHttpOnly, opts.CookieExpire, domain, refresh)
+	log.Printf("Cookie settings: name:%s secure(https):%v httponly:%v expiry:%s domain:%s refresh:%s", opts.CookieName, opts.CookieSecure, opts.CookieHTTPOnly, opts.CookieExpire, domain, refresh)
 
 	var cipher *cookie.Cipher
 	if opts.CookieRefresh != time.Duration(0) {
@@ -150,7 +151,7 @@ func NewLdapProxy(opts *Options, validator func(string) bool) *LdapProxy {
 		CookieSeed:     opts.CookieSecret,
 		CookieDomain:   opts.CookieDomain,
 		CookieSecure:   opts.CookieSecure,
-		CookieHttpOnly: opts.CookieHttpOnly,
+		CookieHTTPOnly: opts.CookieHTTPOnly,
 		CookieExpire:   opts.CookieExpire,
 		CookieRefresh:  opts.CookieRefresh,
 		Validator:      validator,
@@ -213,7 +214,7 @@ func (p *LdapProxy) makeCookie(req *http.Request, name string, value string, exp
 		Value:    value,
 		Path:     "/",
 		Domain:   domain,
-		HttpOnly: p.CookieHttpOnly,
+		HttpOnly: p.CookieHTTPOnly,
 		Secure:   p.CookieSecure,
 		Expires:  now.Add(expiration),
 	}
@@ -299,7 +300,7 @@ func (p *LdapProxy) LdapSignIn(rw http.ResponseWriter, req *http.Request) (strin
 		return "", nil, false
 	}
 
-	ldapClient, err := NewLDAPConnect(p.LdapConfiguration)
+	ldapClient, err := NewLDAPClient(p.LdapConfiguration)
 	if err != nil {
 		log.Printf("Failed to open LDAP Connection: %+v", err)
 		return "", nil, false
@@ -445,7 +446,6 @@ func (p *LdapProxy) SignIn(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	user, ok := p.ManualSignIn(rw, req)
-
 	if ok {
 		if err := p.SaveSession(rw, req, &SessionState{User: user}); err != nil {
 			log.Printf("failed to save session %v", err)

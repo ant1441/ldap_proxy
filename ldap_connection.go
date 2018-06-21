@@ -12,7 +12,7 @@ import (
 	ldap "gopkg.in/ldap.v2"
 )
 
-// LDAPClient contains needed information to make ldap queries
+// LDAPConfiguration contains needed information to make ldap queries
 type LDAPConfiguration struct {
 	Attributes         []string
 	Base               string
@@ -28,17 +28,18 @@ type LDAPConfiguration struct {
 	ClientCertificates []tls.Certificate // Adding client certificates
 }
 
-type LDAPConnection struct {
+// LDAPClient contains an LDAP connection
+type LDAPClient struct {
 	conn *ldap.Conn
 	cfg  *LDAPConfiguration
 }
 
-// Connect connects to the ldap backend.
-func NewLDAPConnect(lc *LDAPConfiguration) (*LDAPConnection, error) {
+// NewLDAPClient creates a connection to the ldap backend.
+func NewLDAPClient(lc *LDAPConfiguration) (*LDAPClient, error) {
 	l, err := ldap.Dial("tcp", fmt.Sprintf("%s:%d", lc.Host, lc.Port))
 	if err != nil {
 		log.Printf("Unable to connect to LDAP Server: %+v", err)
-		return &LDAPConnection{}, err
+		return &LDAPClient{}, err
 	}
 
 	if lc.UseTLS {
@@ -48,7 +49,7 @@ func NewLDAPConnect(lc *LDAPConfiguration) (*LDAPConnection, error) {
 		}
 	}
 
-	conn := LDAPConnection{
+	conn := LDAPClient{
 		conn: l,
 		cfg:  lc,
 	}
@@ -56,14 +57,15 @@ func NewLDAPConnect(lc *LDAPConfiguration) (*LDAPConnection, error) {
 	return &conn, err
 }
 
-func (c *LDAPConnection) Close() {
+// Close ldap connection
+func (c *LDAPClient) Close() {
 	if c.conn != nil {
-		c.Close()
+		c.conn.Close()
 	}
 }
 
 // Authenticate authenticates the user against the ldap backend.
-func (c *LDAPConnection) Authenticate(username, password string) (bool, map[string]string, error) {
+func (c *LDAPClient) Authenticate(username, password string) (bool, map[string]string, error) {
 
 	// First bind with a read only user
 	if c.cfg.BindDN != "" && c.cfg.BindPassword != "" {
@@ -122,7 +124,7 @@ func (c *LDAPConnection) Authenticate(username, password string) (bool, map[stri
 }
 
 // GetGroupsOfUser returns the group for a user.
-func (c *LDAPConnection) GetGroupsOfUser(username string) ([]string, error) {
+func (c *LDAPClient) GetGroupsOfUser(username string) ([]string, error) {
 	searchRequest := ldap.NewSearchRequest(
 		c.cfg.Base,
 		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false,

@@ -18,8 +18,8 @@ import (
 // Configuration Options that can be set by Command Line Flag, or Config File
 type Options struct {
 	ProxyPrefix  string `flag:"proxy-prefix" cfg:"proxy-prefix"`
-	HttpAddress  string `flag:"http-address" cfg:"http_address"`
-	HttpsAddress string `flag:"https-address" cfg:"https_address"`
+	HTTPAddress  string `flag:"http-address" cfg:"http_address"`
+	HTTPSAddress string `flag:"https-address" cfg:"https_address"`
 
 	TLSCertFile   string `flag:"tls-cert" cfg:"tls_cert_file"`
 	TLSKeyFile    string `flag:"tls-key" cfg:"tls_key_file"`
@@ -37,7 +37,7 @@ type Options struct {
 	CookieExpire   time.Duration `flag:"cookie-expire" cfg:"cookie_expire" env:"LDAP_PROXY_COOKIE_EXPIRE"`
 	CookieRefresh  time.Duration `flag:"cookie-refresh" cfg:"cookie_refresh" env:"LDAP_PROXY_COOKIE_REFRESH"`
 	CookieSecure   bool          `flag:"cookie-secure" cfg:"cookie_secure"`
-	CookieHttpOnly bool          `flag:"cookie-httponly" cfg:"cookie_httponly"`
+	CookieHTTPOnly bool          `flag:"cookie-httponly" cfg:"cookie_httponly"`
 
 	Upstreams             []string `flag:"upstream" cfg:"upstreams"`
 	SkipAuthRegex         []string `flag:"skip-auth-regex" cfg:"skip_auth_regex"`
@@ -81,11 +81,11 @@ type SignatureData struct {
 func NewOptions() *Options {
 	return &Options{
 		ProxyPrefix:       "/ldap",
-		HttpAddress:       "127.0.0.1:4180",
-		HttpsAddress:      ":443",
+		HTTPAddress:       "127.0.0.1:4180",
+		HTTPSAddress:      ":443",
 		CookieName:        "_ldap_proxy",
 		CookieSecure:      true,
-		CookieHttpOnly:    true,
+		CookieHTTPOnly:    true,
 		CookieExpire:      time.Duration(168) * time.Hour,
 		CookieRefresh:     time.Duration(0),
 		SetXAuthRequest:   false,

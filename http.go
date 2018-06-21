@@ -23,7 +23,7 @@ func (s *Server) ListenAndServe() {
 }
 
 func (s *Server) ServeHTTP() {
-	httpAddress := s.Opts.HttpAddress
+	httpAddress := s.Opts.HTTPAddress
 	scheme := ""
 
 	i := strings.Index(httpAddress, "://")
@@ -58,7 +58,7 @@ func (s *Server) ServeHTTP() {
 }
 
 func (s *Server) ServeHTTPS() {
-	addr := s.Opts.HttpsAddress
+	addr := s.Opts.HTTPSAddress
 	config := &tls.Config{
 		MinVersion:               tls.VersionTLS12,
 		MaxVersion:               tls.VersionTLS12,
