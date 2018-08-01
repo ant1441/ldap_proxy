@@ -18,11 +18,12 @@ import (
 // Configuration Options that can be set by Command Line Flag, or Config File
 type Options struct {
 	ProxyPrefix  string `flag:"proxy-prefix" cfg:"proxy-prefix"`
-	HttpAddress  string `flag:"http-address" cfg:"http_address"`
-	HttpsAddress string `flag:"https-address" cfg:"https_address"`
+	HTTPAddress  string `flag:"http-address" cfg:"http_address"`
+	HTTPSAddress string `flag:"https-address" cfg:"https_address"`
 
-	TLSCertFile string `flag:"tls-cert" cfg:"tls_cert_file"`
-	TLSKeyFile  string `flag:"tls-key" cfg:"tls_key_file"`
+	TLSCertFile   string `flag:"tls-cert" cfg:"tls_cert_file"`
+	TLSKeyFile    string `flag:"tls-key" cfg:"tls_key_file"`
+	CiphersSuites string `flag:"cipher-suites" cfg:"cipher_suites"`
 
 	EmailDomains            []string `flag:"email-domain" cfg:"email_domains"`
 	AuthenticatedEmailsFile string   `flag:"authenticated-emails-file" cfg:"authenticated_emails_file"`
@@ -36,7 +37,7 @@ type Options struct {
 	CookieExpire   time.Duration `flag:"cookie-expire" cfg:"cookie_expire" env:"LDAP_PROXY_COOKIE_EXPIRE"`
 	CookieRefresh  time.Duration `flag:"cookie-refresh" cfg:"cookie_refresh" env:"LDAP_PROXY_COOKIE_REFRESH"`
 	CookieSecure   bool          `flag:"cookie-secure" cfg:"cookie_secure"`
-	CookieHttpOnly bool          `flag:"cookie-httponly" cfg:"cookie_httponly"`
+	CookieHTTPOnly bool          `flag:"cookie-httponly" cfg:"cookie_httponly"`
 
 	Upstreams             []string `flag:"upstream" cfg:"upstreams"`
 	SkipAuthRegex         []string `flag:"skip-auth-regex" cfg:"skip_auth_regex"`
@@ -55,19 +56,21 @@ type Options struct {
 
 	SignatureKey string `flag:"signature-key" cfg:"signature_key" env:"LDAP_PROXY_SIGNATURE_KEY"`
 
-	LdapServerHost     string `flag:"ldap-server-host" cfg:"ldap_server_host"`
-	LdapServerPort     int    `flag:"ldap-server-port" cfg:"ldap_server_port"`
-	LdapTLS            bool   `flag:"ldap-tls" cfg:"ldap_tls"`
-	LdapScopeName      string `flag:"ldap-scope-name" cfg:"ldap_scope_name"`
-	LdapBaseDn         string `flag:"ldap-base-dn" cfg:"ldap_base_dn"`
-	LdapBindDn         string `flag:"ldap-bind-dn" cfg:"ldap_bind_dn"`
-	LdapBindDnPassword string `flag:"ldap-bind-dn-password" cfg:"ldap_bind_dn_password"`
+	LdapServerHost     string   `flag:"ldap-server-host" cfg:"ldap_server_host"`
+	LdapServerPort     int      `flag:"ldap-server-port" cfg:"ldap_server_port"`
+	LdapTLS            bool     `flag:"ldap-tls" cfg:"ldap_tls"`
+	LdapScopeName      string   `flag:"ldap-scope-name" cfg:"ldap_scope_name"`
+	LdapBaseDn         string   `flag:"ldap-base-dn" cfg:"ldap_base_dn"`
+	LdapBindDn         string   `flag:"ldap-bind-dn" cfg:"ldap_bind_dn"`
+	LdapBindDnPassword string   `flag:"ldap-bind-dn-password" cfg:"ldap_bind_dn_password"`
+	LdapGroups         []string `flag:"ldap-groups" cfg:"ldap_groups"`
 
 	// internal values that are set after config validation
 	proxyURLs         []*url.URL
 	CompiledPathRegex []*regexp.Regexp
 	skipIPs           []*net.IPNet
 	signatureData     *SignatureData
+	ciphersSuites     []uint16
 }
 
 type SignatureData struct {
@@ -78,11 +81,11 @@ type SignatureData struct {
 func NewOptions() *Options {
 	return &Options{
 		ProxyPrefix:       "/ldap",
-		HttpAddress:       "127.0.0.1:4180",
-		HttpsAddress:      ":443",
+		HTTPAddress:       "127.0.0.1:4180",
+		HTTPSAddress:      ":443",
 		CookieName:        "_ldap_proxy",
 		CookieSecure:      true,
-		CookieHttpOnly:    true,
+		CookieHTTPOnly:    true,
 		CookieExpire:      time.Duration(168) * time.Hour,
 		CookieRefresh:     time.Duration(0),
 		SetXAuthRequest:   false,
@@ -149,7 +152,7 @@ func (o *Options) Validate() error {
 		_, cidr, err := net.ParseCIDR(u)
 		if err != nil {
 			msgs = append(msgs, fmt.Sprintf(
-				"error parsing cidr", u, err))
+				"error parsing cidr %q: %v", u, err))
 		}
 		o.skipIPs = append(o.skipIPs, cidr)
 	}
@@ -196,6 +199,8 @@ func (o *Options) Validate() error {
 		http.DefaultClient = &http.Client{Transport: insecureTransport}
 	}
 
+	msgs = parseCipherSuites(o, msgs)
+
 	if len(msgs) != 0 {
 		return fmt.Errorf("Invalid configuration:\n  %s",
 			strings.Join(msgs, "\n  "))
@@ -220,6 +225,19 @@ func parseSignatureKey(o *Options, msgs []string) []string {
 			o.SignatureKey)
 	} else {
 		o.signatureData = &SignatureData{hash, secretKey}
+	}
+	return msgs
+}
+
+func parseCipherSuites(o *Options, msgs []string) []string {
+	if o.CiphersSuites == "" {
+		return msgs
+	}
+
+	if ciphers, err := cipherSuites(o.CiphersSuites); err != nil {
+		return append(msgs, err.Error())
+	} else {
+		o.ciphersSuites = ciphers
 	}
 	return msgs
 }
@@ -253,4 +271,47 @@ func secretBytes(secret string) []byte {
 		return []byte(addPadding(string(b)))
 	}
 	return []byte(secret)
+}
+
+// parse user supplied cipher list
+func cipherSuites(cipherStr string) ([]uint16, error) {
+	// https://golang.org/src/crypto/tls/cipher_suites.go
+
+	cipherMap := map[string]uint16{
+		"TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305":    tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
+		"TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305":  tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
+		"TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256":   tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+		"TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256": tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+		"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384":   tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+		"TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384": tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+		"TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256":   tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,
+		"TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA":      tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+		"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256": tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
+		"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA":    tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
+		"TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA":      tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+		"TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA":    tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+		"TLS_RSA_WITH_AES_128_GCM_SHA256":         tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
+		"TLS_RSA_WITH_AES_256_GCM_SHA384":         tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+		"TLS_RSA_WITH_AES_128_CBC_SHA256":         tls.TLS_RSA_WITH_AES_128_CBC_SHA256,
+		"TLS_RSA_WITH_AES_128_CBC_SHA":            tls.TLS_RSA_WITH_AES_128_CBC_SHA,
+		"TLS_RSA_WITH_AES_256_CBC_SHA":            tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+		"TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA":     tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+		"TLS_RSA_WITH_3DES_EDE_CBC_SHA":           tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+		"TLS_RSA_WITH_RC4_128_SHA":                tls.TLS_RSA_WITH_RC4_128_SHA,
+		"TLS_ECDHE_RSA_WITH_RC4_128_SHA":          tls.TLS_ECDHE_RSA_WITH_RC4_128_SHA,
+		"TLS_ECDHE_ECDSA_WITH_RC4_128_SHA":        tls.TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,
+	}
+
+	userCiphers := strings.Split(cipherStr, ",")
+	suites := []uint16{}
+
+	for _, cipher := range userCiphers {
+		if v, ok := cipherMap[cipher]; ok {
+			suites = append(suites, v)
+		} else {
+			return suites, fmt.Errorf("unsupported cipher %q", cipher)
+		}
+	}
+
+	return suites, nil
 }

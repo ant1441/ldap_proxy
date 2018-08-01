@@ -122,12 +122,12 @@ func getTemplates() *template.Template {
 	</div>
 
 	{{ if .Failed }}
-	<p class="failed">Invalid Credentials!</p>
+	<p class="failed">Invalid Credentials Or Not In Correct Group!</p>
 	{{ end}}
 	<form method="POST" action="{{.ProxyPrefix}}/sign_in">
 		<input type="hidden" name="rd" value="{{.Redirect}}">
 		<label for="username">Username:</label><input type="text" name="username" id="username" size="10"><br/>
-		<label for="password">Password:</label><input type="password" name="password" id="password" size="10"><br/>
+		<label for="password">Password:</label><input type="password" name="password" id="password" size="10" autocomplete="off"><br/>
 		<button type="submit" class="btn">Sign In</button>
 	</form>
 	</div>
@@ -144,7 +144,7 @@ func getTemplates() *template.Template {
 	<footer>
 	{{ if eq .Footer "-" }}
 	{{ else if eq .Footer ""}}
-	Secured with <a href="https://github.com/ant1441/ldap_proxy">LDAP Proxy</a> version {{.Version}}
+	Secured with <a href="https://github.com/skybet/ldap_proxy">LDAP Proxy</a> version {{.Version}}
 	{{ else }}
 	{{.Footer}}
 	{{ end }}

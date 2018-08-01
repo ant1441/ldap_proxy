@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ant1441/ldap_proxy/cookie"
+	"github.com/skybet/ldap_proxy/cookie"
 )
 
 type SessionState struct {

@@ -1,92 +1,147 @@
 package main
 
+// original work imported from https://github.com/jtblin/go-ldap-client (thank you)
+// code is slightly changed
+
 import (
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"log"
 
-	"gopkg.in/ldap.v2"
+	ldap "gopkg.in/ldap.v2"
 )
 
-type LdapConnection struct {
-	Host string
-	Port int
-	TLS  bool
-
-	BaseDN         string
-	BindDN         string
-	BindDNPassword string
-
-	LdapScopeName string
+// LDAPConfiguration contains needed information to make ldap queries
+type LDAPConfiguration struct {
+	Attributes         []string
+	Base               string
+	BindDN             string
+	BindPassword       string
+	GroupFilter        string // e.g. "(memberUid=%s)"
+	Host               string
+	ServerName         string
+	UserFilter         string // e.g. "(uid=%s)"
+	Port               int
+	InsecureSkipVerify bool
+	UseTLS             bool
+	ClientCertificates []tls.Certificate // Adding client certificates
 }
 
-func NewLdapConnection(host string, port int, tls bool,
-	baseDN string, bindDN string, bindDNPassword string,
-	scopeName string) *LdapConnection {
-	log.Printf("Connecting to LDAP '%s:%d' (tls: %t)\n", host, port, tls)
-	return &LdapConnection{
-		Host:           host,
-		Port:           port,
-		BaseDN:         baseDN,
-		BindDN:         bindDN,
-		BindDNPassword: bindDNPassword,
-		TLS:            tls,
-		LdapScopeName:  scopeName,
-	}
+// LDAPClient contains an LDAP connection
+type LDAPClient struct {
+	conn *ldap.Conn
+	cfg  *LDAPConfiguration
 }
 
-func (l *LdapConnection) VerifyUserPass(username string, password string) bool {
-	ldap_con, err := ldap.Dial("tcp", fmt.Sprintf("%s:%d", l.Host, l.Port))
+// NewLDAPClient creates a connection to the ldap backend.
+func NewLDAPClient(lc *LDAPConfiguration) (*LDAPClient, error) {
+	l, err := ldap.Dial("tcp", fmt.Sprintf("%s:%d", lc.Host, lc.Port))
 	if err != nil {
-		log.Printf("Error connecting to LDAP Server '%s:%d': %s", l.Host, l.Port, err)
-		return false
+		log.Printf("Unable to connect to LDAP Server: %+v", err)
+		return &LDAPClient{}, err
 	}
-	defer ldap_con.Close()
 
-	if l.TLS {
-		// Reconnect with TLS
-		err = ldap_con.StartTLS(&tls.Config{InsecureSkipVerify: true})
+	if lc.UseTLS {
+		err = l.StartTLS(&tls.Config{InsecureSkipVerify: lc.InsecureSkipVerify})
 		if err != nil {
-			log.Printf("Unable to connect to LDAP Server with TLS: %s", err)
-			return false
+			log.Printf("Unable to connect to LDAP Server with TLS: %+v", err)
 		}
 	}
 
-	// First bind with a read only user
-	err = ldap_con.Bind(l.BindDN, l.BindDNPassword)
-	if err != nil {
-		log.Printf("Error binding LDAP: ", err)
-		return false
+	conn := LDAPClient{
+		conn: l,
+		cfg:  lc,
 	}
 
+	return &conn, err
+}
+
+// Close ldap connection
+func (c *LDAPClient) Close() {
+	if c.conn != nil {
+		c.conn.Close()
+	}
+}
+
+// Authenticate authenticates the user against the ldap backend.
+func (c *LDAPClient) Authenticate(username, password string) (bool, map[string]string, error) {
+
+	// First bind with a read only user
+	if c.cfg.BindDN != "" && c.cfg.BindPassword != "" {
+		err := c.conn.Bind(c.cfg.BindDN, c.cfg.BindPassword)
+		if err != nil {
+			return false, nil, err
+		}
+	}
+
+	attributes := append(c.cfg.Attributes, "dn")
 	// Search for the given username
 	searchRequest := ldap.NewSearchRequest(
-		l.BaseDN,
+		c.cfg.Base,
 		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false,
-		fmt.Sprintf("(&(objectClass=organizationalPerson)(uid=%s))", username),
-		[]string{"dn"},
+		fmt.Sprintf(c.cfg.UserFilter, username),
+		attributes,
 		nil,
 	)
 
-	sr, err := ldap_con.Search(searchRequest)
+	sr, err := c.conn.Search(searchRequest)
 	if err != nil {
-		log.Printf("Error searching for '%s': %s", username, err)
-		return false
+		return false, nil, err
 	}
 
-	if len(sr.Entries) != 1 {
-		log.Printf("User does not exist or too many entries returned")
-		return false
+	if len(sr.Entries) < 1 {
+		return false, nil, errors.New("User does not exist")
 	}
 
-	userdn := sr.Entries[0].DN
+	if len(sr.Entries) > 1 {
+		return false, nil, errors.New("Too many entries returned")
+	}
+
+	userDN := sr.Entries[0].DN
+	user := map[string]string{
+		"dn": userDN,
+	}
+	for _, attr := range c.cfg.Attributes {
+		user[attr] = sr.Entries[0].GetAttributeValue(attr)
+	}
 
 	// Bind as the user to verify their password
-	err = ldap_con.Bind(userdn, password)
+	err = c.conn.Bind(userDN, password)
 	if err != nil {
-		log.Printf("Error binding as user: %s", err)
-		return false
+		return false, user, err
 	}
 
-	return true
+	// Rebind as the read only user for any further queries
+	if c.cfg.BindDN != "" && c.cfg.BindPassword != "" {
+		err = c.conn.Bind(c.cfg.BindDN, c.cfg.BindPassword)
+		if err != nil {
+			return true, user, err
+		}
+	}
+
+	return true, user, nil
+}
+
+// GetGroupsOfUser returns the group for a user.
+func (c *LDAPClient) GetGroupsOfUser(username string) ([]string, error) {
+	searchRequest := ldap.NewSearchRequest(
+		c.cfg.Base,
+		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false,
+		fmt.Sprintf(c.cfg.GroupFilter, username),
+		[]string{"cn"}, // can it be something else than "cn"?
+		nil,
+	)
+
+	sr, err := c.conn.Search(searchRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	groups := []string{}
+	for _, entry := range sr.Entries {
+		groups = append(groups, entry.GetAttributeValue("cn"))
+	}
+
+	return groups, nil
 }

@@ -21,6 +21,7 @@ func main() {
 	upstreams := StringArray{}
 	skipAuthRegex := StringArray{}
 	skipAuthIPs := StringArray{}
+	ldapGroups := StringArray{}
 
 	config := flagSet.String("config", "", "path to config file")
 	showVersion := flagSet.Bool("version", false, "print version string")
@@ -29,6 +30,7 @@ func main() {
 	flagSet.String("https-address", ":443", "<addr>:<port> to listen on for HTTPS clients")
 	flagSet.String("tls-cert", "", "path to certificate file")
 	flagSet.String("tls-key", "", "path to private key file")
+	flagSet.String("cipher-suites", "", "cipher suites (comma separated)")
 
 	flagSet.Bool("set-xauthrequest", false, "set X-Auth-Request-User and X-Auth-Request-Email response headers (useful in Nginx auth_request mode)")
 	flagSet.Var(&upstreams, "upstream", "the http url(s) of the upstream endpoint or file:// paths for static files. Routing is based on the path")
@@ -72,6 +74,7 @@ func main() {
 	flagSet.String("ldap-base-dn", "", "Base DN for LDAP bind")
 	flagSet.String("ldap-bind-dn", "", "Bind DN for LDAP bind")
 	flagSet.String("ldap-bind-dn-password", "", "Bind DN password for LDAP bind")
+	flagSet.Var(&ldapGroups, "ldap-groups", "Groups a user must be in")
 
 	flagSet.Parse(os.Args[1:])
 

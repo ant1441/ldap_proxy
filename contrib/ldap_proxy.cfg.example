@@ -1,5 +1,5 @@
 ## LDAP Proxy Config File
-## https://github.com/ant1441/ldap_proxy
+## https://github.com/skybet/ldap_proxy
 
 ## <addr>:<port> to listen on for HTTP/HTTPS clients
 # http_address = "127.0.0.1:4180"
@@ -25,6 +25,7 @@
 # ldap_base_dn = "dc=example,dc=com"
 # ldap_bind_dn = "dc=example,dc=com"
 # ldap_bind_dn_password = "password"
+# ldap_groups = []
 
 ## pass HTTP Basic Auth, X-Forwarded-User and X-Forwarded-Email information to upstream
 # pass_basic_auth = true
