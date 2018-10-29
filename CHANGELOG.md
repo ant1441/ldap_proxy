@@ -1,3 +1,7 @@
+0.3.4 (2018-10-29)
+==================
+* Make LDAP group comparisons case-insensitive
+
 0.3.3 (2018-06-21)
 ==================
 * Refactor LDAP connection code and use connections more efficiently
