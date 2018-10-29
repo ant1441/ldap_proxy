@@ -120,7 +120,7 @@ func (fnc *fakeNetConn) Read(p []byte) (n int, err error) {
 	return 0, io.EOF
 }
 
-func TestSliceContains(t *testing.T) {
+func TestSliceContainsString(t *testing.T) {
 	testCases := []struct {
 		desc   string
 		a      []string
@@ -130,6 +130,12 @@ func TestSliceContains(t *testing.T) {
 		{
 			desc:   "happy path",
 			a:      []string{"a", "b", "c"},
+			b:      []string{"b"},
+			expect: true,
+		},
+		{
+			desc:   "happy path case insensitive",
+			a:      []string{"a", "B", "c"},
 			b:      []string{"b"},
 			expect: true,
 		},
@@ -149,7 +155,7 @@ func TestSliceContains(t *testing.T) {
 
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			if res := sliceContains(tC.a, tC.b); res != tC.expect {
+			if res := sliceContainsString(tC.a, tC.b); res != tC.expect {
 				t.Errorf("with a %+v and b %+v, expected %+v, got %v", tC.a, tC.b, tC.expect, res)
 			}
 		})

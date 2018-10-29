@@ -464,7 +464,7 @@ func (p *LdapProxy) SignIn(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	if len(p.LdapGroups) > 0 {
-		if sliceContains(p.LdapGroups, groups) {
+		if sliceContainsString(p.LdapGroups, groups) {
 			if err := p.SaveSession(rw, req, session); err != nil {
 				log.Printf("failed to save session %v", err)
 			}
@@ -637,11 +637,11 @@ func (p *LdapProxy) CheckBasicAuth(req *http.Request) (*SessionState, error) {
 	return nil, fmt.Errorf("%s not in HtpasswdFile", pair[0])
 }
 
-// sliceContains returns true if a and b contains any common string
-func sliceContains(a, b []string) bool {
+// sliceContainsString returns true if a and b contains any common string ignoring case
+func sliceContainsString(a, b []string) bool {
 	for _, aItem := range a {
 		for _, bItem := range b {
-			if aItem == bItem {
+			if strings.ToLower(aItem) == strings.ToLower(bItem) {
 				return true
 			}
 		}
