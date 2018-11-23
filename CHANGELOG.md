@@ -1,3 +1,14 @@
+0.4.0 (2018-11-23)
+==================
+* URGENT SECURITY FIX: authentication bypass via LDAP passwordless auth LDAP permits passwordless Bind operations by clients - this application verified authentication without checking specifically for an empty password, thus allowing authentication as any valid user by leaving the password field blank. This issue has been present since the first release of this application.
+
+  See also:
+  * https://github.com/go-ldap/ldap/pull/126
+  * https://github.com/pinepain/ldap-auth-proxy/issues/8
+  * https://github.com/go-ldap/ldap/issues/93
+
+* Added HTTP security headers and prevent caching of proxy pages
+
 0.3.4 (2018-10-29)
 ==================
 * Make LDAP group comparisons case-insensitive
