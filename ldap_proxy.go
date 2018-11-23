@@ -220,12 +220,12 @@ func (p *LdapProxy) makeCookie(req *http.Request, name string, value string, exp
 	}
 }
 
-func (p *LdapProxy) RobotsTxt(rw http.ResponseWriter) {
+func (p *LdapProxy) RobotsTxt(rw http.ResponseWriter, req *http.Request) {
 	rw.WriteHeader(http.StatusOK)
 	fmt.Fprintf(rw, "User-agent: *\nDisallow: /")
 }
 
-func (p *LdapProxy) PingPage(rw http.ResponseWriter) {
+func (p *LdapProxy) PingPage(rw http.ResponseWriter, req *http.Request) {
 	rw.WriteHeader(http.StatusOK)
 	fmt.Fprintf(rw, "OK")
 }
@@ -396,17 +396,17 @@ func (p *LdapProxy) getRemoteAddrStr(req *http.Request) (s string) {
 func (p *LdapProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	switch path := req.URL.Path; {
 	case path == p.RobotsPath:
-		p.RobotsTxt(rw)
+		NoCache(p.RobotsTxt)(rw, req)
 	case path == p.PingPath:
-		p.PingPage(rw)
+		NoCache(p.PingPage)(rw, req)
 	case p.IsWhitelistedRequest(req):
 		p.serveMux.ServeHTTP(rw, req)
 	case path == p.SignInPath:
-		p.SignIn(rw, req)
+		NoCache(p.SignIn)(rw, req)
 	case path == p.SignOutPath:
-		p.SignOut(rw, req)
+		NoCache(p.SignOut)(rw, req)
 	case path == p.AuthOnlyPath:
-		p.AuthenticateOnly(rw, req)
+		NoCache(p.AuthenticateOnly)(rw, req)
 	default:
 		p.Proxy(rw, req)
 	}
