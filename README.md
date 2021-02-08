@@ -5,7 +5,7 @@ A reverse proxy and static file server that provides authentication using LDAP.
 
 Strongly inspired by [bitly/oauth2_proxy](https://github.com/bitly/oauth2_proxy).
 
-[![Build Status](https://secure.travis-ci.org/ant1441/ldap_proxy.png?branch=master)](http://travis-ci.org/ant1441/ldap_proxy)
+[![Build Status](https://travis-ci.com/skybet/ldap_proxy.svg?branch=master)](https://travis-ci.com/skybet/ldap_proxy)
 
 ![Screenshot](docs/screenshot.png)
 
