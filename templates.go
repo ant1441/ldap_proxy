@@ -118,7 +118,7 @@ func getTemplates() *template.Template {
 	{{ if .SignInMessage }}
 	<p>{{.SignInMessage}}</p>
 	{{ end}}
-	<h1>Sign in with a {{.LdapScopeName}} Account<br/></h1>
+	<h1>Sign in with your {{.LdapScopeName}} account<br/></h1>
 	</div>
 
 	{{ if .Failed }}
