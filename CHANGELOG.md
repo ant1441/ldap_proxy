@@ -1,3 +1,7 @@
+0.5.0 (2021-02-08)
+==================
+* Fix support for ldap_scope_name
+
 0.4.0 (2018-11-23)
 ==================
 * URGENT SECURITY FIX: authentication bypass via LDAP passwordless auth LDAP permits passwordless Bind operations by clients - this application verified authentication without checking specifically for an empty password, thus allowing authentication as any valid user by leaving the password field blank. This issue has been present since the first release of this application.
