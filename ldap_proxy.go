@@ -52,6 +52,7 @@ type LdapProxy struct {
 	AuthOnlyPath string
 
 	ProxyPrefix     string
+	LdapScopeName   string
 	SignInMessage   string
 	HtpasswdFile    *HtpasswdFile
 	serveMux        http.Handler
@@ -175,6 +176,7 @@ func NewLdapProxy(opts *Options, validator func(string) bool) *LdapProxy {
 
 		LdapConfiguration: ldapCfg,
 		LdapGroups:        opts.LdapGroups,
+		LdapScopeName:     opts.LdapScopeName,
 
 		skipAuthRegex:     opts.SkipAuthRegex,
 		skipAuthIPs:       opts.skipIPs,
@@ -267,6 +269,7 @@ func (p *LdapProxy) SignInPage(rw http.ResponseWriter, req *http.Request, code i
 		ProxyPrefix   string
 		Footer        template.HTML
 	}{
+		LdapScopeName: p.LdapScopeName,
 		SignInMessage: p.SignInMessage,
 		Failed:        failed,
 		Redirect:      redirectURL,
