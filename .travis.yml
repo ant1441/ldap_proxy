@@ -1,7 +1,8 @@
 language: go
 go:
-  - 1.7.5
-  - 1.8.1
+  - 1.10.x
+  - 1.11.x
+  - 1.12.x
 script:
   - curl -s https://raw.githubusercontent.com/pote/gpm/v1.4.0/bin/gpm > gpm
   - chmod +x gpm

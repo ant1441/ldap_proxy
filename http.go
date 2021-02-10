@@ -48,7 +48,7 @@ func (s *Server) ServeHTTP() {
 	}
 	log.Printf("HTTP: listening on %s", listenAddr)
 
-	server := &http.Server{Handler: s.Handler}
+	server := &http.Server{Handler: XFrameOptionsMiddleware(s.Handler)}
 	err = server.Serve(listener)
 	if err != nil && !strings.Contains(err.Error(), "use of closed network connection") {
 		log.Printf("ERROR: http.Serve() - %s", err)
@@ -83,7 +83,7 @@ func (s *Server) ServeHTTPS() {
 	log.Printf("HTTPS: listening on %s", ln.Addr())
 
 	tlsListener := tls.NewListener(tcpKeepAliveListener{ln.(*net.TCPListener)}, config)
-	srv := &http.Server{Handler: s.Handler}
+	srv := &http.Server{Handler: HSTSMiddleware(XFrameOptionsMiddleware(s.Handler))}
 	err = srv.Serve(tlsListener)
 
 	if err != nil && !strings.Contains(err.Error(), "use of closed network connection") {
@@ -109,4 +109,30 @@ func (ln tcpKeepAliveListener) Accept() (c net.Conn, err error) {
 	tc.SetKeepAlive(true)
 	tc.SetKeepAlivePeriod(3 * time.Minute)
 	return tc, nil
+}
+
+// HSTSMiddleware sets Strict-Transport-Security header
+func HSTSMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
+		next.ServeHTTP(w, r)
+	})
+}
+
+// XFrameOptionsMiddleware sets X-Frame-Options header
+func XFrameOptionsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("X-Frame-Options", "deny")
+		next.ServeHTTP(w, r)
+	})
+}
+
+// NoCache sets no cache headers
+func NoCache(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Cache-control", "no-store")
+		w.Header().Add("Pragma", "no-cache")
+
+		next(w, r)
+	}
 }

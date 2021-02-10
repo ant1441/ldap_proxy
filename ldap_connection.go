@@ -66,6 +66,9 @@ func (c *LDAPClient) Close() {
 
 // Authenticate authenticates the user against the ldap backend.
 func (c *LDAPClient) Authenticate(username, password string) (bool, map[string]string, error) {
+	if username == "" || password == "" {
+		return false, nil, errors.New("invalid user or password")
+	}
 
 	// First bind with a read only user
 	if c.cfg.BindDN != "" && c.cfg.BindPassword != "" {
@@ -116,7 +119,7 @@ func (c *LDAPClient) Authenticate(username, password string) (bool, map[string]s
 	if c.cfg.BindDN != "" && c.cfg.BindPassword != "" {
 		err = c.conn.Bind(c.cfg.BindDN, c.cfg.BindPassword)
 		if err != nil {
-			return true, user, err
+			return false, user, err
 		}
 	}
 

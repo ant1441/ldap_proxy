@@ -52,6 +52,7 @@ type LdapProxy struct {
 	AuthOnlyPath string
 
 	ProxyPrefix     string
+	LdapScopeName   string
 	SignInMessage   string
 	HtpasswdFile    *HtpasswdFile
 	serveMux        http.Handler
@@ -175,6 +176,7 @@ func NewLdapProxy(opts *Options, validator func(string) bool) *LdapProxy {
 
 		LdapConfiguration: ldapCfg,
 		LdapGroups:        opts.LdapGroups,
+		LdapScopeName:     opts.LdapScopeName,
 
 		skipAuthRegex:     opts.SkipAuthRegex,
 		skipAuthIPs:       opts.skipIPs,
@@ -220,12 +222,12 @@ func (p *LdapProxy) makeCookie(req *http.Request, name string, value string, exp
 	}
 }
 
-func (p *LdapProxy) RobotsTxt(rw http.ResponseWriter) {
+func (p *LdapProxy) RobotsTxt(rw http.ResponseWriter, req *http.Request) {
 	rw.WriteHeader(http.StatusOK)
 	fmt.Fprintf(rw, "User-agent: *\nDisallow: /")
 }
 
-func (p *LdapProxy) PingPage(rw http.ResponseWriter) {
+func (p *LdapProxy) PingPage(rw http.ResponseWriter, req *http.Request) {
 	rw.WriteHeader(http.StatusOK)
 	fmt.Fprintf(rw, "OK")
 }
@@ -267,6 +269,7 @@ func (p *LdapProxy) SignInPage(rw http.ResponseWriter, req *http.Request, code i
 		ProxyPrefix   string
 		Footer        template.HTML
 	}{
+		LdapScopeName: p.LdapScopeName,
 		SignInMessage: p.SignInMessage,
 		Failed:        failed,
 		Redirect:      redirectURL,
@@ -396,17 +399,17 @@ func (p *LdapProxy) getRemoteAddrStr(req *http.Request) (s string) {
 func (p *LdapProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	switch path := req.URL.Path; {
 	case path == p.RobotsPath:
-		p.RobotsTxt(rw)
+		NoCache(p.RobotsTxt)(rw, req)
 	case path == p.PingPath:
-		p.PingPage(rw)
+		NoCache(p.PingPage)(rw, req)
 	case p.IsWhitelistedRequest(req):
 		p.serveMux.ServeHTTP(rw, req)
 	case path == p.SignInPath:
-		p.SignIn(rw, req)
+		NoCache(p.SignIn)(rw, req)
 	case path == p.SignOutPath:
-		p.SignOut(rw, req)
+		NoCache(p.SignOut)(rw, req)
 	case path == p.AuthOnlyPath:
-		p.AuthenticateOnly(rw, req)
+		NoCache(p.AuthenticateOnly)(rw, req)
 	default:
 		p.Proxy(rw, req)
 	}
@@ -464,7 +467,7 @@ func (p *LdapProxy) SignIn(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	if len(p.LdapGroups) > 0 {
-		if sliceContains(p.LdapGroups, groups) {
+		if sliceContainsString(p.LdapGroups, groups) {
 			if err := p.SaveSession(rw, req, session); err != nil {
 				log.Printf("failed to save session %v", err)
 			}
@@ -637,11 +640,11 @@ func (p *LdapProxy) CheckBasicAuth(req *http.Request) (*SessionState, error) {
 	return nil, fmt.Errorf("%s not in HtpasswdFile", pair[0])
 }
 
-// sliceContains returns true if a and b contains any common string
-func sliceContains(a, b []string) bool {
+// sliceContainsString returns true if a and b contains any common string ignoring case
+func sliceContainsString(a, b []string) bool {
 	for _, aItem := range a {
 		for _, bItem := range b {
-			if aItem == bItem {
+			if strings.ToLower(aItem) == strings.ToLower(bItem) {
 				return true
 			}
 		}

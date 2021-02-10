@@ -5,13 +5,13 @@ A reverse proxy and static file server that provides authentication using LDAP.
 
 Strongly inspired by [bitly/oauth2_proxy](https://github.com/bitly/oauth2_proxy).
 
-[![Build Status](https://secure.travis-ci.org/ant1441/ldap_proxy.png?branch=master)](http://travis-ci.org/ant1441/ldap_proxy)
+[![Build Status](https://travis-ci.com/skybet/ldap_proxy.svg?branch=master)](https://travis-ci.com/skybet/ldap_proxy)
 
 ![Screenshot](docs/screenshot.png)
 
 ## Installation
 
-1. Download [Prebuilt Binary](https://github.com/skybet/ldap_proxy/releases) (current release is `v2.2`) or build with `$ go get github.com/skybet/ldap_proxy` which will put the binary in `$GOROOT/bin`
+1. Download [Prebuilt Binary](https://github.com/skybet/ldap_proxy/releases) or build with `$ go get github.com/skybet/ldap_proxy` which will put the binary in `$GOROOT/bin`
 3. Configure Ldap Proxy using config file, command line options, or environment variables
 4. Configure SSL or Deploy behind a SSL endpoint (example provided for Nginx)
 
@@ -149,7 +149,7 @@ would be `https://internal.yourcompany.com/`.
 An example Nginx config follows. Note the use of `Strict-Transport-Security` header to pin requests to SSL
 via [HSTS](http://en.wikipedia.org/wiki/HTTP_Strict_Transport_Security):
 
-```
+```nginx
 server {
     listen 443 default ssl;
     server_name internal.yourcompany.com;
